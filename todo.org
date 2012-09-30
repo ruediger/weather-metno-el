@@ -1,0 +1,16 @@
+# -*- mode:org; coding:utf-8 -*-
+* TODO add met.no symbol
+- Link on http://api.met.no/license_data.html is broken!
+- is logo CC as well?
+* TODO org integration
+* TODO symbol fetch
+http://api.met.no/weatherapi/weathericon/1.0/documentation
+* TODO support for other apis?
+Other met.no apis are norway specific.
+http://api.met.no/weatherapi/documentation
+* TODO defaults for lat/lon
+* TODO integration with geonames.el
+osm-mode's geonames.el could be used to get lat/lon for location names
+* TODO fix warnings
+* TODO make forecast buffer more usable
+Current format is more or less a data dump and not very useful.
