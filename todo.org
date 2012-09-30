@@ -3,6 +3,7 @@
 - Link on http://api.met.no/license_data.html is broken!
 - is logo CC as well?
 * org integration
+** TODO auto update weather data
 ** TODO allow user defined format
 ** TODO provide more data
 * DONE symbolf etch
