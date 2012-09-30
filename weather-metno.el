@@ -95,8 +95,8 @@ See `weather-metno-location-latitude' and `weather-metno-location-msl'."
                  (number :tag "Exact")))
 
 (defcustom weather-metno-format-time-string "%Y-%m-%dT%H:%M:%S%Z"
-  "Format string used to format time data.  See `format-time-string' for a
-description of the format."
+  "Format string used to format time data.
+See `format-time-string' for a description of the format."
   :group 'weather-metno
   :type 'string)
 
@@ -110,7 +110,7 @@ description of the format."
   "Version of locationforecast.")
 
 (defconst weather-metno-logo "met-no.png"
-  "File name of the met.no logo")
+  "File name of the met.no logo.")
 
 (defun weather-metno~weathericon-url (icon &optional nightp polarp content-type)
   "Create URL for weathericon API."
@@ -182,7 +182,7 @@ compatible timestamps.  Except for fractional seconds! Thanks to tali713."
             "")))
 
 (defun weather-metno~date-to-time (x)
-  "Converts RFC3339 string X to Emacs's time format.
+  "Convert RFC3339 string X to Emacs's time format.
 Emacs's time format is (HIGH LOW . IGNORED)."
   (apply 'encode-time (weather-metno~parse-time-string x)))
 
@@ -268,7 +268,7 @@ documentation of the web API."
                   (list callback lat lon msl))))
 
 (defun weather-metno~string-empty? (x)
-  "Return non-nil when X is either nil or empty string"
+  "Return non-nil when X is either nil or empty string."
   (or (string= x "") (not x)))
 
 (defun weather-metno~format-with-loc (x)
@@ -279,7 +279,7 @@ documentation of the web API."
     (format "%s [Default for %s]: " x weather-metno-location-name)))
 
 (defun weather-metno~n2s (n)
-  "Convert N from number to string or nil if not a number"
+  "Convert N from number to string or nil if not a number."
   (if (numberp n)
       (number-to-string n)))
 
