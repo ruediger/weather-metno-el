@@ -318,71 +318,75 @@ E.g. temperature, pressure, precipitation, ..."
           (cdr (assq 'value attributes))
           (cdr (assq 'unit attributes))))
 
-(defun weather-metno~format~precipitation (attributes)
+(defun weather-metno~format~precipitation (attributes _)
   "Format precipitation."
   (weather-metno~format-value-unit "Precipitation" attributes))
 
-(defun weather-metno~format~temperature (attributes)
+(defun weather-metno~format~temperature (attributes _)
   "Format temperature."
   (weather-metno~format-value-unit "Temperature" attributes))
 
-(defun weather-metno~format~pressure (attributes)
+(defun weather-metno~format~pressure (attributes _)
   "Format pressure."
   (weather-metno~format-value-unit "Pressure" attributes))
 
-(defun weather-metno~format~humidity (attributes)
+(defun weather-metno~format~humidity (attributes _)
   "Format humidity."
   (weather-metno~format-value-unit "Humidity" attributes))
 
-(defun weather-metno~format~windDirection (attributes)
+(defun weather-metno~format~windDirection (attributes _)
   "Format wind direction."
   (format "Wind direction %s° (%s)"
           (cdr (assq 'deg attributes))
           (cdr (assq 'name attributes))))
 
-(defun weather-metno~format~windSpeed (attributes)
+(defun weather-metno~format~windSpeed (attributes _)
   "Format wind speed."
   (format "Wind speed %s m/s (Beaufort scale %s) %s"
           (cdr (assq 'mps attributes))
           (cdr (assq 'beaufort attributes))
           (cdr (assq 'name attributes))))
 
-(defun weather-metno~format~cloudiness (attributes)
+(defun weather-metno~format~cloudiness (attributes _)
   "Format cloudiness."
   (format "Cloudiness %s%%"
           (cdr (assq 'percent attributes))))
 
-(defun weather-metno~format~fog (attributes)
+(defun weather-metno~format~fog (attributes _)
   "Format fog."
   (format "Fog %s%%"
           (cdr (assq 'percent attributes))))
 
-(defun weather-metno~format~lowClouds (attributes)
+(defun weather-metno~format~lowClouds (attributes _)
   "Format low clouds."
   (format "Low clouds %s%%"
           (cdr (assq 'percent attributes))))
 
-(defun weather-metno~format~mediumClouds (attributes)
+(defun weather-metno~format~mediumClouds (attributes _)
   "Format medium clouds."
   (format "Medium clouds %s%%"
           (cdr (assq 'percent attributes))))
 
-(defun weather-metno~format~highClouds (attributes)
+(defun weather-metno~format~highClouds (attributes _)
   "Format high clouds."
   (format "High clouds %s%%"
           (cdr (assq 'percent attributes))))
 
-(defun weather-metno~format~symbol (attributes)
+(defun weather-metno~format~symbol (attributes last-headline)
   "Format symbol."
-  "" ;ignored for now
-  )
+  (weather-metno-insert-weathericon
+   (current-buffer) last-headline
+   (string-to-number (cdr (assq 'number attributes))))
+  "")
 
-(defun weather-metno~format-entry (entry)
-  "Format ENTRY."
+;; Todo the last-headline thing sucks. Find something better!
+(defun weather-metno~format-entry (entry &optional last-headline)
+  "Format ENTRY.
+LAST-HEADLINE should point to the place where icons can be inserted."
   (let ((formatter (intern (concat "weather-metno~format~"
                                    (symbol-name (car entry))))))
     (if (fboundp formatter)
-        (funcall formatter (cadr entry))
+        (funcall formatter (cadr entry) last-headline)
       (format "Unknown entry %s" entry))))
 
 ;;;###autoload
@@ -405,6 +409,9 @@ E.g. temperature, pressure, precipitation, ..."
 
      (dolist (location data)
 
+       (when (get-buffer weather-metno-buffer-name)
+         (kill-buffer weather-metno-buffer-name))
+
        (switch-to-buffer weather-metno-buffer-name)
        (erase-buffer)
        (goto-char (point-min))
@@ -415,7 +422,8 @@ E.g. temperature, pressure, precipitation, ..."
                                      (caddar location)))
 
        (dolist (forecast (cadr location))
-         (let ((date-range (car forecast)))
+         (let ((date-range (car forecast))
+               (last-headline (point)))
            (weather-metno~insert 'weather-metno-date-range
                                  "* From "
                                  (format-time-string
@@ -428,7 +436,7 @@ E.g. temperature, pressure, precipitation, ..."
                    "\n")
 
            (dolist (entry (cdr forecast))
-             (let ((fmt-entry (weather-metno~format-entry entry)))
+             (let ((fmt-entry (weather-metno~format-entry entry last-headline)))
                (unless (weather-metno~string-empty? fmt-entry)
                  (weather-metno~insert 'weather-metno-entry
                                        "** " fmt-entry "\n"))
