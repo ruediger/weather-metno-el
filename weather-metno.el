@@ -340,12 +340,33 @@ E.g. temperature, pressure, precipitation, ..."
           (cdr (assq 'deg attributes))
           (cdr (assq 'name attributes))))
 
+(defcustom weather-metno-translate-wind-name
+  '(("Stille" . "Calm")                ; 0  beaufort scale
+    ("Flau vind" . "Light air")        ; 1
+    ("Svak vind" . "Light breeze")     ; 2
+    ("Lett bris" . "Gentle breeze")    ; 3
+    ("Laber bris" . "Moderate breeze") ; 4
+    ("Frisk bris" . "Fresh breeze")    ; 5
+    ("Liten kuling" . "Strong breeze") ; 6
+    ("Stiv kuling" . "High wind")      ; 7
+    ("Sterk kuling" . "Fresh gale")    ; 8
+    ("Liten storm" . "Strong gale")    ; 9
+    ("Full storm" . "Storm")           ; 10
+    ("Sterk storm" . "Violent storm")  ; 11
+    ("Orkan" . "Hurricane"))           ; 12
+  "Table to translate wind names from Norwegian."
+  :group 'weather-metno) ; TODO type
+
+(defun weather-metno~translate-wind-name (name)
+  "Translate NAME from Norwegian."
+  (cdr (assoc name weather-metno-translate-wind-name)))
+
 (defun weather-metno~format~windSpeed (attributes _)
   "Format wind speed."
   (format "Wind speed %s m/s (Beaufort scale %s) %s"
           (cdr (assq 'mps attributes))
           (cdr (assq 'beaufort attributes))
-          (cdr (assq 'name attributes))))
+          (weather-metno~translate-wind-name (cdr (assq 'name attributes)))))
 
 (defun weather-metno~format~cloudiness (attributes _)
   "Format cloudiness."
