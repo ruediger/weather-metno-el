@@ -8,8 +8,7 @@ outside of Norway as well. Weather-metno-el uses the met.no webservice to
 provide the weather data in Emacs.
 
 The project is currently work in progress and likely to change
-dramatically.  See =todo.org= for todos and longterm goals (like
-org-mode integration).
+dramatically.  See =todo.org= for todos and longterm goals.
 
 To get started compile and load the file =weather-metno.el=.  Set the
 variables =weather-metno-location-name=,
@@ -19,3 +18,16 @@ necessary but will provide useful defaults for the forecast.
 
 Now run =M-x weather-metno-forecast= and it will open a new buffer
 showing the weather forecast for the given location.
+
+* Orgmode support
+Add the following line to an agenda file:
+
+#+BEGIN_SRC org-mode
+* Weather
+#+CATEGORY: Weather
+%%(org-weather-metno)
+#+END_SRC
+
+And the agenda should contain a weather forecast. Currently the
+provided data is very limited and a manually update is required by
+calling =M-x org-weather-metno-update=.
