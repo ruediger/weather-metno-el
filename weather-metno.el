@@ -94,6 +94,12 @@ See `weather-metno-location-latitude' and `weather-metno-location-msl'."
   :type '(choice (const nil)
                  (number :tag "Exact")))
 
+(defcustom weather-metno-format-time-string "%Y-%m-%dT%H:%M:%S%Z"
+  "Format string used to format time data.  See `format-time-string' for a
+description of the format."
+  :group 'weather-metno
+  :type 'string)
+
 (defconst weather-metno-url "http://api.met.no/weatherapi/"
   "URL to api.met.no.")
 
@@ -365,11 +371,13 @@ E.g. temperature, pressure, precipitation, ..."
          (let ((date-range (car forecast)))
            (weather-metno~insert 'weather-metno-date-range
                                  "* From "
-                                 (format-time-string "%Y-%m-%dT%H:%M:%S%Z"
-                                                     (car date-range))
+                                 (format-time-string
+                                  weather-metno-format-time-string
+                                  (car date-range))
                                  " to "
-                                 (format-time-string "%Y-%m-%dT%H:%M:%S%Z"
-                                                     (cadr date-range))
+                                 (format-time-string
+                                  weather-metno-format-time-string
+                                  (cadr date-range))
                    "\n")
 
            (dolist (entry (cdr forecast))
