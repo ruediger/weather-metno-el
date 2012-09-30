@@ -21,7 +21,7 @@
 ;; along with weather-el.  If not, see <http://www.gnu.org/licenses/>.
 
 ;;; Commentary:
-;; 
+;; Internal commands use ~ in the prefix.
 
 ;;; Code:
 
@@ -71,55 +71,71 @@ compatible timestamps.  Except for fractional seconds! Thanks to tali713."
             "")))
 
 (defun weather-metno~date-to-time (x)
+  "Converts RFC3339 string X to Emacs's time format.
+Emacs's time format is (HIGH LOW . IGNORED)."
   (apply 'encode-time (weather-metno~parse-time-string x)))
 
-(defvar weather-dbg) ;; DBG!
-
 (defun weather-metno~forecast-convert (xml)
-  "Convert the XML structure from met.no to an internal format."
-  (dolist (i
-           (xml-node-children (car (xml-get-children
-                                    (car weather-dbg) ;; replace with (car xml)!!!!!
-                                    'product)))
-           res)
-;    (setq res nil)
-    (when (and (consp i) (eq (car i) 'time))
-      (let* ((from (weather-metno~date-to-time
-                    (xml-get-attribute i 'from)))
-             (to (weather-metno~date-to-time
-                  (xml-get-attribute i 'to))))
+  "Convert the XML structure from met.no to an internal format.
+Internal format is ((COORD ((DATE-RANGE) (ENTRY0) (ENTRY1) ...))).
+COORD is (LAT LON ALT).
+DATE-RANGE is (FROM TO) with FROM and TO in Emacs's time format.
+ENTRY is (TYPE (ATTRIBUTES))."
+  (let (res)
+    (dolist (i
+             (xml-node-children (car (xml-get-children
+                                      (car xml)
+                                      'product))))
+      ;; iterator over all <time> entries
+      (when (and (consp i) (eq (car i) 'time))
+        ;; extract from,to attributes
+        (let ((from (weather-metno~date-to-time
+                     (xml-get-attribute i 'from)))
+              (to (weather-metno~date-to-time
+                   (xml-get-attribute i 'to))))
 
-        (dolist (loc (xml-get-children i 'location))
+          ;; iterator over <location> entries
+          (dolist (loc (xml-get-children i 'location))
 
-          (let* ((coord (list
-                         (xml-get-attribute-or-nil loc 'latitude)
-                         (xml-get-attribute-or-nil loc 'longitude)
-                         (xml-get-attribute-or-nil loc 'altitude)
-                         ))
-                 (entry (assoc coord res)))
-            (unless entry
-              (setq entry (list coord))
-              (setq res (append res (list entry)))
-              (message "RES %s -> %s" res entry))
+            (let* ((coord (list
+                           (xml-get-attribute-or-nil loc 'latitude)
+                           (xml-get-attribute-or-nil loc 'longitude)
+                           (xml-get-attribute-or-nil loc 'altitude)
+                           )) ;; Coord: (lat lon alt)
+                   (entry (assoc coord res))
+                   (date-range (list from to))
+                   (forecast (assoc date-range (cdr entry))))
+              (unless entry
+                (setq entry (list coord))
+                (setq res (append res (list entry))))
 
-            (dolist (fcast (xml-node-children loc))
-              (when (consp fcast)
-                (setcdr entry
-                        (list (append (cadr entry)
-                                      (list (list
-                                       (xml-node-name fcast)
-                                       )))))
-                ))
+              (unless forecast
+                (setq forecast (list date-range))
+                (setcdr entry (list (append (cadr entry)
+                                            (list forecast)))))
 
-            ))
 
-        ))))
+              (dolist (fcast (xml-node-children loc))
+                (when (consp fcast)
+                  (setcdr forecast
+                          (append (cdr forecast)
+                                  (list
+                                   (list (xml-node-name fcast)
+                                         (xml-node-attributes fcast))))))))))))
+    res))
 
-(defun weather-metno-forecast (lat lon &optional msl)
-  "."
+(defun weather-metno-forecast-receive (callback lat lon &optional msl raw-xml)
+  "Fetch weather forecast from met.no for LAT LON (MSL).
+CALLBACK is called when the request is completed.  CALLBACK gets called with
+ (LAT LON MSL RAW-XML DATA) as arguments.  DATA is the received data in the
+format described in `weather-metno~forecast-convert'.  Unless RAW-XML is set in
+which case DATA is simply the result of `xml-parse-region'.
+
+See http://api.met.no/weatherapi/locationforecast/1.8/documentation for the
+documentation of the web API."
   (let ((url (weather-metno~forecast-url lat lon msl)))
     (url-retrieve url
-                  (lambda (status url lat lon msl)
+                  (lambda (status callback url lat lon msl)
                     (switch-to-buffer (current-buffer))
                     (goto-char (point-min))
                     (unless (search-forward "\n\n" nil t)
@@ -130,17 +146,15 @@ compatible timestamps.  Except for fractional seconds! Thanks to tali713."
                         (kill-buffer)
                         (error "Unable to fetch data"))
                       (url-store-in-cache (current-buffer))
-                      
+
                       (let ((xml (xml-parse-region (point) (point-max))))
                         (kill-buffer)
 
-                        (setq weather-dbg xml) ;; DBG
-
-                        
-
-                        )))
-                  (list url lat lon msl))))
-    
+                        (funcall callback lat lon msl raw-xml
+                                 (if raw-xml
+                                     xml
+                                   (weather-metno~forecast-convert xml))))))
+                  (list callback url lat lon msl))))
 
 (provide 'weather-metno)
 
