@@ -1,0 +1,21 @@
+# -*- mode:org; mode:visual-line; coding:utf-8; -*-
+#+TITLE: weather-metno-el: Weather data from met.no in Emacs
+
+[[http://www.met.no/][Meteorologisk institutt]] (met.no) is the Norwegian national
+meterological institute.  It offers free weather data under the
+[[http://creativecommons.org/licenses/by/3.0][CC BY 3.0]] license.  The forecast data is available for locations
+outside of Norway as well. Weather-metno-el uses the met.no webservice to
+provide the weather data in Emacs.
+
+The project is currently work in progress and likely to change
+dramatically.  See =todo.org= for todos and longterm goals (like
+org-mode integration).
+
+To get started compile and load the file =weather-metno.el=.  Set the
+variables =weather-metno-location-name=,
+=weather-metno-location-latitude=, =weather-metno-location-longitude=,
+and optionally =weather-metno-location-msl=.  This is not strictly
+necessary but will provide useful defaults for the forecast.
+
+Now run =M-x weather-metno-forecast= and it will open a new buffer
+showing the weather forecast for the given location.
