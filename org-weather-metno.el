@@ -54,6 +54,7 @@
   "Convert DATE-RANGE to some time."
   (format-time-string "%Hh" (car date-range)))
 
+;;;###autoload
 (defun org-weather-metno ()
   "Display weather in diary/org-mode."
   (unless org-weather-metno~data
