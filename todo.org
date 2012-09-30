@@ -3,7 +3,7 @@
 - Link on http://api.met.no/license_data.html is broken!
 - is logo CC as well?
 * TODO org integration
-* TODO symbol fetch
+* DONE symbolf etch
 http://api.met.no/weatherapi/weathericon/1.0/documentation
 * TODO support for other apis?
 Other met.no apis are norway specific.
