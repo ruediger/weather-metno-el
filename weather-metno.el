@@ -103,11 +103,55 @@ description of the format."
 (defconst weather-metno-url "http://api.met.no/weatherapi/"
   "URL to api.met.no.")
 
+(defconst weather-metno-weathericon-version "1.0"
+  "Version of weathericon.")
+
 (defconst weather-metno-forecast-version "1.8"
   "Version of locationforecast.")
 
 (defconst weather-metno-logo "met-no.png"
   "File name of the met.no logo")
+
+(defun weather-metno~weathericon-url (icon &optional nightp polarp content-type)
+  "Create URL for weathericon API."
+  (assert (integerp icon))
+  (format "%sweathericon/%s/?symbol=%s%s%s;content_type=%s" weather-metno-url
+          weather-metno-weathericon-version icon
+          (if nightp ";is_night=1" "")
+          (if polarp ";is_polarday=1" "")
+          (or content-type "image/png")))
+
+(defun weather-metno-insert-weathericon (buffer point icon &optional nightp
+                                                polarp content-type)
+  "Fetch the weather ICON and insert it into BUFFER at POINT.
+This function works asynchronously.  If NIGHTP is set then a night icon will be
+fetched.  If POLARP then an icon for a polarday will be fetched.  CONTENT-TYPE
+specifies the content-type (default image/png).
+
+This uses the met.no weathericon API
+http://api.met.no/weatherapi/weathericon/1.0/documentation
+
+The data is available under CC-BY-3.0."
+  (let ((url (weather-metno~weathericon-url icon nightp polarp content-type)))
+    (url-retrieve
+     url
+     (lambda (status buffer point)
+       (switch-to-buffer (current-buffer))
+       (goto-char (point-min))
+       (unless (search-forward "\n\n" nil t)
+         (kill-buffer)
+         (error "Error in http reply"))
+       (let ((headers (buffer-substring (point-min) (point))))
+         (unless (string-match-p "^HTTP/1.1 200 OK" headers)
+           (kill-buffer)
+           (error "Unable to fetch data"))
+         (url-store-in-cache (current-buffer))
+
+         (let ((image (create-image (buffer-substring (point) (point-max)) 'png t)))
+           (kill-buffer)
+           (with-current-buffer buffer
+             (put-image image point)))))
+     (list buffer point))))
 
 (defun weather-metno~parse-time-string (time-string)
   "Parse a RFC3339 compliant TIME-STRING.
