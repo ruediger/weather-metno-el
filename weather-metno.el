@@ -106,6 +106,9 @@ description of the format."
 (defconst weather-metno-forecast-version "1.8"
   "Version of locationforecast.")
 
+(defconst weather-metno-logo "met-no.png"
+  "File name of the met.no logo")
+
 (defun weather-metno~parse-time-string (time-string)
   "Parse a RFC3339 compliant TIME-STRING.
 This function is similar to `decode-time' but works with RFC3339 (ISO 8601)
@@ -276,7 +279,6 @@ E.g. temperature, pressure, precipitation, ..."
 
 (defun weather-metno~format~temperature (attributes)
   "Format temperature."
-  (message "ATTR %s" attributes)
   (weather-metno~format-value-unit "Temperature" attributes))
 
 (defun weather-metno~format~pressure (attributes)
@@ -388,9 +390,12 @@ E.g. temperature, pressure, precipitation, ..."
                ))
            ))
        )
+     (insert "\n")
+     (when (file-exists-p weather-metno-logo)
+       (insert-image-file weather-metno-logo))
      (weather-metno~insert
       'weather-metno-footer
-      "\nData from The Norwegian Meteorological Institute (CC BY 3.0)\n")) ;; TODO symbol + link!
+      "Data from The Norwegian Meteorological Institute (CC BY 3.0)\n")) ;; TODO link!
      lat lon msl))
 
 (provide 'weather-metno)
