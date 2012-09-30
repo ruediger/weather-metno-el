@@ -428,15 +428,14 @@ LAST-HEADLINE should point to the place where icons can be inserted."
    (lambda (lat lon msl raw-xml data)
      (assert (not raw-xml))
 
+     (when (get-buffer weather-metno-buffer-name)
+       (kill-buffer weather-metno-buffer-name))
+
+     (switch-to-buffer weather-metno-buffer-name)
+     (erase-buffer)
+     (goto-char (point-min))
+
      (dolist (location data)
-
-       (when (get-buffer weather-metno-buffer-name)
-         (kill-buffer weather-metno-buffer-name))
-
-       (switch-to-buffer weather-metno-buffer-name)
-       (erase-buffer)
-       (goto-char (point-min))
-
        (weather-metno~insert 'weather-metno-header
                              (format "Forecast for location %s,%s %s\n"
                                      (caar location) (cadar location)
