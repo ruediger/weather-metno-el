@@ -2,7 +2,9 @@
 * TODO add met.no symbol
 - Link on http://api.met.no/license_data.html is broken!
 - is logo CC as well?
-* TODO org integration
+* org integration
+** TODO allow user defined format
+** TODO provide more data
 * DONE symbolf etch
 http://api.met.no/weatherapi/weathericon/1.0/documentation
 * TODO support for other apis?
