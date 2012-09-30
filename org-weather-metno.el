@@ -37,6 +37,7 @@
 
 (defun org-weather-metno-update (&optional lat lon msl)
   "Update weather data."
+  (interactive)
   (weather-metno-forecast-receive
    (lambda (lat lon msl raw-xml data)
      (assert (not raw-xml))
