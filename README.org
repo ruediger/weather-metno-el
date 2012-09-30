@@ -23,8 +23,6 @@ showing the weather forecast for the given location.
 Add the following line to an agenda file:
 
 #+BEGIN_SRC org-mode
-* Weather
-#+CATEGORY: Weather
 %%(org-weather-metno)
 #+END_SRC
 
