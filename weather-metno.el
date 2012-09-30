@@ -327,6 +327,7 @@ E.g. temperature, pressure, precipitation, ..."
         (funcall formatter (cadr entry))
       (format "Unknown entry %s" entry))))
 
+;;;###autoload
 (defun weather-metno-forecast (lat lon &optional msl)
   "Fetch weather forecast from met.no for LAT LON (MSL)."
   (interactive
