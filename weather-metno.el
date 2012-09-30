@@ -247,6 +247,11 @@ documentation of the web API."
   "Face for entry."
   :group 'weather-metno)
 
+(defface weather-metno-footer
+  '((t :inherit font-lock-comment-face))
+  "Face for entry."
+  :group 'weather-metno)
+
 (defun weather-metno~insert (face &rest args)
   "Insert ARGS into current buffer with FACE."
   (insert (propertize (apply 'concat args) 'face face)))
@@ -375,7 +380,9 @@ E.g. temperature, pressure, precipitation, ..."
                ))
            ))
        )
-     (insert "\n\nData from The Norwegian Meteorological Institute (CC BY 3.0)")) ;; TODO symbol + link!
+     (weather-metno~insert
+      'weather-metno-footer
+      "\nData from The Norwegian Meteorological Institute (CC BY 3.0)\n")) ;; TODO symbol + link!
      lat lon msl))
 
 (provide 'weather-metno)
