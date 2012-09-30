@@ -147,7 +147,8 @@ The data is available under CC-BY-3.0."
            (error "Unable to fetch data"))
          (url-store-in-cache (current-buffer))
 
-         (let ((image (create-image (buffer-substring (point) (point-max)) 'png t)))
+         (let ((image (create-image (buffer-substring (point) (point-max))
+                                    (if content-type nil 'png) t)))
            (kill-buffer)
            (with-current-buffer buffer
              (put-image image point)))))
