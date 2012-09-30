@@ -21,6 +21,10 @@
 ;; along with weather-el.  If not, see <http://www.gnu.org/licenses/>.
 
 ;;; Commentary:
+
+;; See http://api.met.no/weatherapi/documentation
+;; and http://api.met.no/license_data.html
+
 ;; Internal commands use ~ in the prefix.
 
 ;;; Code:
@@ -37,6 +41,59 @@
   :prefix "weather-metno-"
   :group 'comm)
 
+(defun weather-metno~get-default-location-name ()
+  "Find default location name."
+  (if (boundp 'user-location-name)
+      user-location-name
+    (if (boundp 'calendar-location-name)
+        calendar-location-name
+      "")))
+
+(defcustom weather-metno-location-name
+  (weather-metno~get-default-location-name)
+  "Name of the default weather location.
+See `weather-metno-location-latitude', `weather-metno-location-longitude', and
+`weather-metno-location-msl'."
+  :group 'weather-metno
+  :type 'string)
+
+(defun weather-metno~get-default-location-latitude ()
+  "Find default location latitude."
+  (if (boundp 'user-location-latitude)
+      user-location-latitude
+    (if (require 'solar nil t)
+        (calendar-latitude)
+      0))) ;; TODO better default?
+
+(defcustom weather-metno-location-latitude
+  (weather-metno~get-default-location-latitude)
+  "Latitude of `weather-metno-location-name' in degrees.
+See `weather-metno-location-longitude' and `weather-metno-location-msl'."
+  :group 'weather-metno
+  :type '(number :tag "Exact"))
+
+(defun weather-metno~get-default-location-longitude ()
+  "Find default location latitude."
+  (if (boundp 'user-location-longitude)
+      user-location-longitude
+    (if (require 'solar nil t)
+        (calendar-longitude)
+      0))) ;; TODO better default?
+
+(defcustom weather-metno-location-longitude
+  (weather-metno~get-default-location-longitude)
+  "Longitude of `weather-metno-location-name' in degrees.
+See `weather-metno-location-latitude' and `weather-metno-location-msl'."
+  :group 'weather-metno
+  :type '(number :tag "Exact"))
+
+(defcustom weather-metno-location-msl nil
+  "Whole meters above sea level of `weather-metno-location-name' in degrees.
+See `weather-metno-location-latitude' and `weather-metno-location-msl'."
+  :group 'weather-metno
+  :type '(choice (const nil)
+                 (number :tag "Exact")))
+
 (defconst weather-metno-url "http://api.met.no/weatherapi/"
   "URL to api.met.no.")
 
@@ -50,9 +107,9 @@ compatible timestamps.  Except for fractional seconds! Thanks to tali713."
   (destructuring-bind (year month day time zone)
       (append (timezone-parse-date time-string) nil)
     `(,@(subseq (parse-time-string time) 0 3)
-      ,(string-to-int day)
-      ,(string-to-int month)
-      ,(string-to-int year)
+      ,(string-to-number day)
+      ,(string-to-number month)
+      ,(string-to-number year)
       nil
       nil
       ,(if zone
@@ -155,6 +212,170 @@ documentation of the web API."
                                      xml
                                    (weather-metno~forecast-convert xml))))))
                   (list callback url lat lon msl))))
+
+(defun weather-metno~string-empty? (x)
+  "Return non-nil when X is either nil or empty string"
+  (or (string= x "") (not x)))
+
+(defun weather-metno~format-with-loc (x)
+  "Convert X into a minibuffer query string."
+  (if (weather-metno~string-empty?
+       weather-metno-location-name)
+      (concat x ": ")
+    (format "%s [Default for %s]: " x weather-metno-location-name)))
+
+(defun weather-metno~n2s (n)
+  "Convert N from number to string or nil if not a number"
+  (if (numberp n)
+      (number-to-string n)))
+
+(defvar weather-metno-buffer-name "*Weather*"
+  "Name for the forecast buffer.")
+
+(defface weather-metno-header
+  '((t :inherit header-line))
+  "Face for top header line."
+  :group 'weather-metno)
+
+(defface weather-metno-date-range
+  '((t :inherit header-line))
+  "Face for date range line."
+  :group 'weather-metno)
+
+(defface weather-metno-entry
+  '((t :inherit font-lock-variable-name-face))
+  "Face for entry."
+  :group 'weather-metno)
+
+(defun weather-metno~insert (face &rest args)
+  "Insert ARGS into current buffer with FACE."
+  (insert (propertize (apply 'concat args) 'face face)))
+
+(defun weather-metno~format-value-unit (name attributes)
+  "Helper to format entries that contain UNIT and VALUE.
+E.g. temperature, pressure, precipitation, ..."
+  (format "%s %s %s"
+          name
+          (cdr (assq 'value attributes))
+          (cdr (assq 'unit attributes))))
+
+(defun weather-metno~format~precipitation (attributes)
+  "Format precipitation."
+  (weather-metno~format-value-unit "Precipitation" attributes))
+
+(defun weather-metno~format~temperature (attributes)
+  "Format temperature."
+  (message "ATTR %s" attributes)
+  (weather-metno~format-value-unit "Temperature" attributes))
+
+(defun weather-metno~format~pressure (attributes)
+  "Format pressure."
+  (weather-metno~format-value-unit "Pressure" attributes))
+
+(defun weather-metno~format~humidity (attributes)
+  "Format humidity."
+  (weather-metno~format-value-unit "Humidity" attributes))
+
+(defun weather-metno~format~windDirection (attributes)
+  "Format wind direction."
+  (format "Wind direction %s° (%s)"
+          (cdr (assq 'deg attributes))
+          (cdr (assq 'name attributes))))
+
+(defun weather-metno~format~windSpeed (attributes)
+  "Format wind speed."
+  (format "Wind speed %s m/s (Beaufort scale %s) %s"
+          (cdr (assq 'mps attributes))
+          (cdr (assq 'beaufort attributes))
+          (cdr (assq 'name attributes))))
+
+(defun weather-metno~format~cloudiness (attributes)
+  "Format cloudiness."
+  (format "Cloudiness %s%%"
+          (cdr (assq 'percent attributes))))
+
+(defun weather-metno~format~fog (attributes)
+  "Format fog."
+  (format "Fog %s%%"
+          (cdr (assq 'percent attributes))))
+
+(defun weather-metno~format~lowClouds (attributes)
+  "Format low clouds."
+  (format "Low clouds %s%%"
+          (cdr (assq 'percent attributes))))
+
+(defun weather-metno~format~mediumClouds (attributes)
+  "Format medium clouds."
+  (format "Medium clouds %s%%"
+          (cdr (assq 'percent attributes))))
+
+(defun weather-metno~format~highClouds (attributes)
+  "Format high clouds."
+  (format "High clouds %s%%"
+          (cdr (assq 'percent attributes))))
+
+(defun weather-metno~format~symbol (attributes)
+  "Format symbol."
+  "" ;ignored for now
+  )
+
+(defun weather-metno~format-entry (entry)
+  "Format ENTRY."
+  (let ((formatter (intern (concat "weather-metno~format~"
+                                   (symbol-name (car entry))))))
+    (if (fboundp formatter)
+        (funcall formatter (cadr entry))
+      (format "Unknown entry %s" entry))))
+
+(defun weather-metno-forecast (lat lon &optional msl)
+  "Fetch weather forecast from met.no for LAT LON (MSL)."
+  (interactive
+   (list
+    (read-string (weather-metno~format-with-loc "Latitude")
+                 (weather-metno~n2s weather-metno-location-latitude))
+    (read-string (weather-metno~format-with-loc "Longitude")
+                 (weather-metno~n2s weather-metno-location-longitude))
+    (read-string (weather-metno~format-with-loc "Whole meters above sea level")
+                 (weather-metno~n2s weather-metno-location-msl))))
+  (when (weather-metno~string-empty? msl)
+    (setq msl nil))
+
+  (weather-metno-forecast-receive
+   (lambda (lat lon msl raw-xml data)
+     (assert (not raw-xml))
+
+     (dolist (location data)
+
+       (switch-to-buffer weather-metno-buffer-name)
+       (erase-buffer)
+       (goto-char (point-min))
+
+       (weather-metno~insert 'weather-metno-header
+                             (format "Forecast for location %s,%s %s\n"
+                                     (caar location) (cadar location)
+                                     (caddar location)))
+
+       (dolist (forecast (cadr location))
+         (let ((date-range (car forecast)))
+           (weather-metno~insert 'weather-metno-date-range
+                                 "* From "
+                                 (format-time-string "%Y-%m-%dT%H:%M:%S%Z"
+                                                     (car date-range))
+                                 " to "
+                                 (format-time-string "%Y-%m-%dT%H:%M:%S%Z"
+                                                     (cadr date-range))
+                   "\n")
+
+           (dolist (entry (cdr forecast))
+             (let ((fmt-entry (weather-metno~format-entry entry)))
+               (unless (weather-metno~string-empty? fmt-entry)
+                 (weather-metno~insert 'weather-metno-entry
+                                       "** " fmt-entry "\n"))
+               ))
+           ))
+       )
+     (insert "\n\nData from The Norwegian Meteorological Institute (CC BY 3.0)")) ;; TODO symbol + link!
+     lat lon msl))
 
 (provide 'weather-metno)
 
