@@ -246,7 +246,7 @@ See http://api.met.no/weatherapi/locationforecast/1.8/documentation for the
 documentation of the web API."
   (let ((url (weather-metno~forecast-url lat lon msl)))
     (url-retrieve url
-                  (lambda (status callback url lat lon msl)
+                  (lambda (status callback lat lon msl)
                     (switch-to-buffer (current-buffer))
                     (goto-char (point-min))
                     (unless (search-forward "\n\n" nil t)
@@ -265,7 +265,7 @@ documentation of the web API."
                                  (if raw-xml
                                      xml
                                    (weather-metno~forecast-convert xml))))))
-                  (list callback url lat lon msl))))
+                  (list callback lat lon msl))))
 
 (defun weather-metno~string-empty? (x)
   "Return non-nil when X is either nil or empty string"
