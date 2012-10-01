@@ -75,7 +75,7 @@
              (to-date (org-weather-metno~time-to-date to)))
         (when (and (calendar-date-equal date from-date)
                    (calendar-date-equal date to-date))
-          (dolist (entry (cdr forecast) res)
+          (dolist (entry (cdr forecast))
             (case (car entry)
               (temperature (setq temperature (append temperature
                                                      (list
