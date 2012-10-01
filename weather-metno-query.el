@@ -72,17 +72,34 @@ Implements :select operation."
                (case (car entry)
                  ,@(mapcar
                     (lambda (ops)
-                      (let ((symbol (cadr (weather-metno-query~get-op :get ops))))
+                      (let ((symbol (cadr (weather-metno-query~get-op :get ops)))
+                            (max (weather-metno-query~get-op :max ops))
+                            (min (weather-metno-query~get-op :min ops))
+                            (min-max (weather-metno-query~get-op :min-max ops)))
                         `(,symbol
-                          (let ((storage (assq (quote ,symbol) ret)))
+                          (let ((storage (assq (quote ,symbol) ret))
+                                (value ,(weather-metno~op-select ops 'entry)))
                             (unless storage
-                              (setq storage (cons (quote ,symbol) nil))
+                              (setq storage
+                                    (cons (quote ,symbol)
+                                          ,(if max
+                                               'most-negative-fixnum
+                                             (if min
+                                                 'most-positive-fixnum
+                                               (when min-max
+                                                 '(cons most-positive-fixnum
+                                                        most-negative-fixnum))))))
                               (setq ret (append ret (list storage))))
-
                             (setcdr storage
-                                    (append (cdr storage)
-                                            (list
-                                             ,(weather-metno~op-select ops 'entry))))))))
+                                    ,(if max
+                                         '(max value (cdr storage))
+                                       (if min
+                                           '(min value (cdr storage))
+                                         (if min-max
+                                             '(cons (min value (cadr storage))
+                                                    (max value (cddr storage)))
+                                           '(append (cdr storage)
+                                                    (list value))))))))))
                     body2))))))
        ,@(mapcar
           (lambda (ops)
@@ -103,11 +120,8 @@ Implements :select operation."
 (weather-metno-query
  (org-weather-metno~data '(lat lon msl) '(10 1 2012))
 
- :get temperature :select value :each string-to-number :reduce avg :format "%s°C"
- :get windSpeed :select (mps name beaufort) :max mps
- :get precipitation :select value :max-min
- :get pressure :select value :max)
-
-
-(weather-metno~op-select '(:get temperature :select value :each) '((value . "jo")))
+ :get temperature :select value :each string-to-number :reduce avg
+ :get windSpeed :select (mps name beaufort)
+ :get precipitation :select value :each string-to-number :min-max
+ :get pressure :select value :each string-to-number :min)
 
