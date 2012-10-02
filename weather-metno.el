@@ -283,7 +283,7 @@ documentation of the web API."
   (if (numberp n)
       (number-to-string n)))
 
-(defvar weather-metno-buffer-name "*Weather*"
+(defvar weather-metno-forecast-buffer-name "*Weather*"
   "Name for the forecast buffer.")
 
 (defface weather-metno-header
@@ -410,9 +410,95 @@ LAST-HEADLINE should point to the place where icons can be inserted."
         (funcall formatter (cadr entry) last-headline)
       (format "Unknown entry %s" entry))))
 
+(defun weather-metno~switch-to-forecast-buffer ()
+  (interactive)
+  (switch-to-buffer weather-metno-forecast-buffer-name))
+
+(defun weather-metno~kill-forecast-buffer ()
+  (interactive)
+  (kill-buffer weather-metno-forecast-buffer-name))
+
+(define-derived-mode weather-metno-forecast-mode special-mode
+  "metno-forecast"
+  "Major mode for showing weather forecasts."
+  :group 'weather-metno
+  
+  (define-key weather-metno-forecast-mode-map "q"
+    'weather-metno~kill-forecast-buffer))
+
+(defvar weather-metno~data nil
+  "Weather data cache.")
+(defvar weather-metno~location nil
+  "Location for `weather-metno~data' cache.") ;; TODO this can be extracted from the data!
+
 ;;;###autoload
-(defun weather-metno-forecast (lat lon &optional msl)
-  "Fetch weather forecast from met.no for LAT LON (MSL)."
+(defun weather-metno-update (&optional lat lon msl)
+  "Update weather data."
+  (interactive)
+  (weather-metno-forecast-receive
+   (lambda (lat lon msl raw-xml data)
+     (assert (not raw-xml))
+     (setq weather-metno~location (list lat lon msl))
+     (setq weather-metno~data data))
+   (or lat weather-metno-location-latitude)
+   (or lon weather-metno-location-longitude)
+   (or msl weather-metno-location-msl)))
+
+;;;###autoload
+(defun weather-metno-forecast ()
+  "Display weather forecast."
+  (interactive)
+  (unless weather-metno~data
+    (weather-metno-update))
+
+  ;; (when (get-buffer weather-metno-buffer-name)
+  ;;   (kill-buffer weather-metno-buffer-name))
+
+  (save-excursion
+   (with-current-buffer (get-buffer-create weather-metno-buffer-name)
+     (let ((inhibit-read-only t))
+       (weather-metno-forecast-mode)
+       (erase-buffer)
+       (goto-char (point-min))
+
+       (dolist (location weather-metno~data)
+         (weather-metno~insert 'weather-metno-header
+                               (format "Forecast for location %s,%s %s\n"
+                                       (caar location) (cadar location)
+                                       (caddar location)))
+
+         (dolist (forecast (cadr location))
+           (let ((date-range (car forecast))
+                 (last-headline (point)))
+             (weather-metno~insert 'weather-metno-date-range
+                                   "* From "
+                                   (format-time-string
+                                    weather-metno-format-time-string
+                                    (car date-range))
+                                   " to "
+                                   (format-time-string
+                                    weather-metno-format-time-string
+                                    (cadr date-range))
+                                   "\n")
+             (dolist (entry (cdr forecast))
+               (let ((fmt-entry (weather-metno~format-entry entry last-headline)))
+                 (unless (weather-metno~string-empty? fmt-entry)
+                   (weather-metno~insert 'weather-metno-entry
+                                         "** " fmt-entry "\n"))
+                 ))
+             ))
+         )
+       (insert "\n")
+       (when (file-exists-p weather-metno-logo)
+         (insert-image-file weather-metno-logo))
+       (weather-metno~insert
+        'weather-metno-footer
+        "Data from The Norwegian Meteorological Institute (CC BY 3.0)\n")) ;; TODO link!
+     ))
+  (weather-metno~switch-to-forecast-buffer)) 
+
+;;;###autoload
+(defun weather-metno-forecast-location (lat lon &optional msl)
   (interactive
    (list
     (read-string (weather-metno~format-with-loc "Latitude")
@@ -423,54 +509,14 @@ LAST-HEADLINE should point to the place where icons can be inserted."
                  (weather-metno~n2s weather-metno-location-msl))))
   (when (weather-metno~string-empty? msl)
     (setq msl nil))
+  
+  (unless (equal (list lat lon msl) weather-metno~data)
+    (weather-metno-update lat lon msl)
+    (weather-metno-forecast)))
 
-  (weather-metno-forecast-receive
-   (lambda (lat lon msl raw-xml data)
-     (assert (not raw-xml))
-
-     (when (get-buffer weather-metno-buffer-name)
-       (kill-buffer weather-metno-buffer-name))
-
-     (switch-to-buffer weather-metno-buffer-name)
-     (erase-buffer)
-     (goto-char (point-min))
-
-     (dolist (location data)
-       (weather-metno~insert 'weather-metno-header
-                             (format "Forecast for location %s,%s %s\n"
-                                     (caar location) (cadar location)
-                                     (caddar location)))
-
-       (dolist (forecast (cadr location))
-         (let ((date-range (car forecast))
-               (last-headline (point)))
-           (weather-metno~insert 'weather-metno-date-range
-                                 "* From "
-                                 (format-time-string
-                                  weather-metno-format-time-string
-                                  (car date-range))
-                                 " to "
-                                 (format-time-string
-                                  weather-metno-format-time-string
-                                  (cadr date-range))
-                   "\n")
-
-           (dolist (entry (cdr forecast))
-             (let ((fmt-entry (weather-metno~format-entry entry last-headline)))
-               (unless (weather-metno~string-empty? fmt-entry)
-                 (weather-metno~insert 'weather-metno-entry
-                                       "** " fmt-entry "\n"))
-               ))
-           ))
-       )
-     (insert "\n")
-     (when (file-exists-p weather-metno-logo)
-       (insert-image-file weather-metno-logo))
-     (weather-metno~insert
-      'weather-metno-footer
-      "Data from The Norwegian Meteorological Institute (CC BY 3.0)\n")) ;; TODO link!
-     lat lon msl))
 
 (provide 'weather-metno)
 
 ;;; weather-metno.el ends here
+
+

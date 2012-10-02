@@ -35,17 +35,6 @@
 (defvar org-weather-metno~data nil
   "The retreived weather data.")
 
-(defun org-weather-metno-update (&optional lat lon msl)
-  "Update weather data."
-  (interactive)
-  (weather-metno-forecast-receive
-   (lambda (lat lon msl raw-xml data)
-     (assert (not raw-xml))
-     (setq org-weather-metno~data data))
-   (or lat weather-metno-location-latitude)
-   (or lon weather-metno-location-longitude)
-   (or msl weather-metno-location-msl)))
-
 (defun org-weather-metno~time-to-date (time)
   "Convert TIME in Emacs's time format to a date in calendar format."
   (let ((d (decode-time time)))
@@ -58,14 +47,13 @@
 ;;;###autoload
 (defun org-weather-metno ()
   "Display weather in diary/org-mode."
-  (unless org-weather-metno~data
-    (org-weather-metno-update))
+  (unless weather-metno~data
+    (weather-metno-update))
 
-  (let ((location (car org-weather-metno~data))
+  (let ((location (car weather-metno~data))
         temperature
         cloudiness
-        precipitation
-        (out ""))
+        precipitation)
 
     (dolist (forecast (cadr location))
       (let* ((date-range (car forecast))
