@@ -163,12 +163,9 @@ The data is available under CC-BY-3.0."
          (expired (if expire-time2
                       (url-cache-expired url expire-time2)
                     t)))
-
-    (if expired
-        (progn
-          (with-temp-buffer
-            (url-cache-extract url)
-            (weather-metno~do-insert-weathericon buffer point content-type)))
+    (if (not expired)
+        (with-current-buffer (url-fetch-from-cache url)
+          (weather-metno~do-insert-weathericon nil buffer point content-type))
       (url-retrieve
        url
        'weather-metno~do-insert-weathericon
