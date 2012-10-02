@@ -484,8 +484,8 @@ LAST-HEADLINE should point to the place where icons can be inserted."
   (unless weather-metno~data
     (weather-metno-update))
 
-  (save-excursion
-    (with-current-buffer (get-buffer-create weather-metno-buffer-name)
+  (with-current-buffer (get-buffer-create weather-metno-buffer-name)
+    (save-excursion
       (let ((inhibit-read-only t))
         (remove-images (point-min) (point-max))
 
@@ -526,8 +526,9 @@ LAST-HEADLINE should point to the place where icons can be inserted."
           (insert-image-file weather-metno-logo))
         (weather-metno~insert
          'weather-metno-footer
-         "Data from The Norwegian Meteorological Institute (CC BY 3.0)\n")) ;; TODO link!
-      ))
+         "Data from The Norwegian Meteorological Institute (CC BY 3.0)\n" ;; TODO link!
+         )))
+    (goto-char (point-min)))
   (weather-metno~switch-to-forecast-buffer))
 
 ;;;###autoload
