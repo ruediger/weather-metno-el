@@ -22,14 +22,28 @@
           (setq ret (cons i nil)))))
     ret))
 
+(defun weather-metno~index (x list)
+  "Return the index of X in LIST."
+  (let ((r 0))
+    (dolist (i list r)
+      (if (eq i x)
+          (return)
+        (setq r (1+ r))))
+    r))
+
 (defun weather-metno~op-each (ops entry)
   ""
-  (let ((each (cadr (weather-metno-query~get-op :each ops))))
+  (let ((each (cadr (weather-metno-query~get-op :each ops)))
+        (symbol (cadr (weather-metno-query~get-op :get ops))))
     (if (not each)
         entry
       (if (functionp each)
           (list 'funcall `(quote ,each) entry)
-        entry))))
+        (if (listp each)
+            (progn
+              (car each)
+              )
+            entry)))))
 
 (defun weather-metno~op-select (ops entry)
   "Select according to OPS from ENTRY.
@@ -149,10 +163,9 @@ Implements :select operation."
 
 
 (weather-metno-query
- (org-weather-metno~data '(lat lon msl) '(10 1 2012))
+ (org-weather-metno~data '(lat lon msl) '(10 2 2012))
 
  :get temperature :select value :each string-to-number :reduce avg
  :get windSpeed :select (mps name beaufort)
  :get precipitation :select value :each string-to-number :min-max
  :get pressure :select value :each string-to-number :min)
-
