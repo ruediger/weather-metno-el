@@ -21,5 +21,3 @@ Current format is more or less a data dump and not very useful.
 This should make processing the data easier. See query branch.
 * TODO [#C] allow external application to update the weather data
 e.g. a cron job. Read/write the cache to a file.
-* TODO use common cache
-Currently only the org part uses a cache
