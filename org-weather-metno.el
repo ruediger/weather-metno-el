@@ -97,11 +97,12 @@
           (when (> temp temp-max)
             (setq temp-max temp)
             (setq temp-max-time (cdr data)))))
-      (format "Temperatures %s℃ (%s) to %s℃ (%s)"
-              temp-min
-              (org-weather-metno~date-range-to-time temp-min-time)
-              temp-max
-              (org-weather-metno~date-range-to-time temp-max-time)))))
+      (unless (or (= temp-min most-positive-fixnum) (= temp-max most-negative-fixnum))
+        (format "%s℃ (%s) to %s℃ (%s)"
+                temp-min
+                (org-weather-metno~date-range-to-time temp-min-time)
+                temp-max
+                (org-weather-metno~date-range-to-time temp-max-time))))))
 
 (provide 'org-weather-metno)
 
