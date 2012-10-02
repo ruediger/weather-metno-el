@@ -121,8 +121,32 @@ See `format-time-string' for a description of the format."
           (if polarp ";is_polarday=1" "")
           (or content-type "image/png")))
 
+(defun weather-metno~do-insert-weathericon (status buffer point content-type)
+  "Insert image in BUFFER at POINT.
+This is used by `weather-metno-insert-weathericon' as handler."
+  (save-excursion
+    (goto-char (point-min))
+    (unless (search-forward "\n\n" nil t)
+      (kill-buffer)
+      (error "Error in http reply"))
+    (let ((headers (buffer-substring (point-min) (point))))
+      (unless (string-match-p "^HTTP/1.1 200 OK" headers)
+        (kill-buffer)
+        (error "Unable to fetch data"))
+      (url-store-in-cache (current-buffer))
+
+      (let ((image (create-image (buffer-substring (point) (point-max))
+                                 (if content-type nil 'png) t)))
+        (kill-buffer)
+        (with-current-buffer buffer
+          (put-image image point))))))
+
+(defvar weather-metno-symbol-expire-time 86400
+  "Expire time for symbols in seconds.
+See `url-cache-expire-time'. Default is 24h (86400s).")
+
 (defun weather-metno-insert-weathericon (buffer point icon &optional nightp
-                                                polarp content-type)
+                                                polarp content-type expire-time)
   "Fetch the weather ICON and insert it into BUFFER at POINT.
 This function works asynchronously.  If NIGHTP is set then a night icon will be
 fetched.  If POLARP then an icon for a polarday will be fetched.  CONTENT-TYPE
@@ -132,27 +156,23 @@ This uses the met.no weathericon API
 http://api.met.no/weatherapi/weathericon/1.0/documentation
 
 The data is available under CC-BY-3.0."
-  (let ((url (weather-metno~weathericon-url icon nightp polarp content-type)))
-    (url-retrieve
-     url
-     (lambda (status buffer point)
-       (save-excursion
-         (goto-char (point-min))
-         (unless (search-forward "\n\n" nil t)
-           (kill-buffer)
-           (error "Error in http reply"))
-         (let ((headers (buffer-substring (point-min) (point))))
-           (unless (string-match-p "^HTTP/1.1 200 OK" headers)
-             (kill-buffer)
-             (error "Unable to fetch data"))
-           (url-store-in-cache (current-buffer))
+  (let* ((url (weather-metno~weathericon-url icon nightp polarp
+                                             content-type))
+         (expire-time2 (or expire-time
+                           weather-metno-symbol-expire-time))
+         (expired (if expire-time2
+                      (url-cache-expired url expire-time2)
+                    t)))
 
-           (let ((image (create-image (buffer-substring (point) (point-max))
-                                      (if content-type nil 'png) t)))
-             (kill-buffer)
-             (with-current-buffer buffer
-               (put-image image point))))))
-     (list buffer point))))
+    (if expired
+        (progn
+          (with-temp-buffer
+            (url-cache-extract url)
+            (weather-metno~do-insert-weathericon buffer point content-type)))
+      (url-retrieve
+       url
+       'weather-metno~do-insert-weathericon
+       (list buffer point content-type)))))
 
 (defun weather-metno~parse-time-string (time-string)
   "Parse a RFC3339 compliant TIME-STRING.
@@ -422,7 +442,7 @@ LAST-HEADLINE should point to the place where icons can be inserted."
   "metno-forecast"
   "Major mode for showing weather forecasts."
   :group 'weather-metno
-  
+
   (define-key weather-metno-forecast-mode-map "q"
     'weather-metno~kill-forecast-buffer))
 
@@ -453,6 +473,7 @@ LAST-HEADLINE should point to the place where icons can be inserted."
 
   (when (get-buffer weather-metno-buffer-name)
     (kill-buffer weather-metno-buffer-name))
+  
   (save-excursion
     (with-current-buffer (get-buffer-create weather-metno-buffer-name)
       (let ((inhibit-read-only t))
@@ -483,7 +504,10 @@ LAST-HEADLINE should point to the place where icons can be inserted."
                 (let ((fmt-entry (weather-metno~format-entry entry last-headline)))
                   (unless (weather-metno~string-empty? fmt-entry)
                     (weather-metno~insert 'weather-metno-entry
-                                          "** " fmt-entry "\n")))))))
+                                          "** " fmt-entry "\n"))
+                  ))
+              ))
+          )
         (insert "\n")
         (when (file-exists-p weather-metno-logo)
           (insert-image-file weather-metno-logo))
@@ -491,7 +515,7 @@ LAST-HEADLINE should point to the place where icons can be inserted."
          'weather-metno-footer
          "Data from The Norwegian Meteorological Institute (CC BY 3.0)\n")) ;; TODO link!
       ))
-  (weather-metno~switch-to-forecast-buffer)) 
+  (weather-metno~switch-to-forecast-buffer))
 
 ;;;###autoload
 (defun weather-metno-forecast-location (lat lon &optional msl)
@@ -505,7 +529,7 @@ LAST-HEADLINE should point to the place where icons can be inserted."
                  (weather-metno~n2s weather-metno-location-msl))))
   (when (weather-metno~string-empty? msl)
     (setq msl nil))
-  
+
   (unless (equal (list lat lon msl) weather-metno~data)
     (weather-metno-update lat lon msl)
     (weather-metno-forecast)))
@@ -514,5 +538,3 @@ LAST-HEADLINE should point to the place where icons can be inserted."
 (provide 'weather-metno)
 
 ;;; weather-metno.el ends here
-
-
