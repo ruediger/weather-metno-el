@@ -451,50 +451,46 @@ LAST-HEADLINE should point to the place where icons can be inserted."
   (unless weather-metno~data
     (weather-metno-update))
 
-  ;; (when (get-buffer weather-metno-buffer-name)
-  ;;   (kill-buffer weather-metno-buffer-name))
-
+  (when (get-buffer weather-metno-buffer-name)
+    (kill-buffer weather-metno-buffer-name))
   (save-excursion
-   (with-current-buffer (get-buffer-create weather-metno-buffer-name)
-     (let ((inhibit-read-only t))
-       (weather-metno-forecast-mode)
-       (erase-buffer)
-       (goto-char (point-min))
+    (with-current-buffer (get-buffer-create weather-metno-buffer-name)
+      (let ((inhibit-read-only t))
+        (weather-metno-forecast-mode)
+        (erase-buffer)
+        (goto-char (point-min))
 
-       (dolist (location weather-metno~data)
-         (weather-metno~insert 'weather-metno-header
-                               (format "Forecast for location %s,%s %s\n"
-                                       (caar location) (cadar location)
-                                       (caddar location)))
+        (dolist (location weather-metno~data)
+          (weather-metno~insert 'weather-metno-header
+                                (format "Forecast for location %s,%s %s\n"
+                                        (caar location) (cadar location)
+                                        (caddar location)))
 
-         (dolist (forecast (cadr location))
-           (let ((date-range (car forecast))
-                 (last-headline (point)))
-             (weather-metno~insert 'weather-metno-date-range
-                                   "* From "
-                                   (format-time-string
-                                    weather-metno-format-time-string
-                                    (car date-range))
-                                   " to "
-                                   (format-time-string
-                                    weather-metno-format-time-string
-                                    (cadr date-range))
-                                   "\n")
-             (dolist (entry (cdr forecast))
-               (let ((fmt-entry (weather-metno~format-entry entry last-headline)))
-                 (unless (weather-metno~string-empty? fmt-entry)
-                   (weather-metno~insert 'weather-metno-entry
-                                         "** " fmt-entry "\n"))
-                 ))
-             ))
-         )
-       (insert "\n")
-       (when (file-exists-p weather-metno-logo)
-         (insert-image-file weather-metno-logo))
-       (weather-metno~insert
-        'weather-metno-footer
-        "Data from The Norwegian Meteorological Institute (CC BY 3.0)\n")) ;; TODO link!
-     ))
+          (dolist (forecast (cadr location))
+            (let ((date-range (car forecast))
+                  (last-headline (point)))
+              (weather-metno~insert 'weather-metno-date-range
+                                    "* From "
+                                    (format-time-string
+                                     weather-metno-format-time-string
+                                     (car date-range))
+                                    " to "
+                                    (format-time-string
+                                     weather-metno-format-time-string
+                                     (cadr date-range))
+                                    "\n")
+              (dolist (entry (cdr forecast))
+                (let ((fmt-entry (weather-metno~format-entry entry last-headline)))
+                  (unless (weather-metno~string-empty? fmt-entry)
+                    (weather-metno~insert 'weather-metno-entry
+                                          "** " fmt-entry "\n")))))))
+        (insert "\n")
+        (when (file-exists-p weather-metno-logo)
+          (insert-image-file weather-metno-logo))
+        (weather-metno~insert
+         'weather-metno-footer
+         "Data from The Norwegian Meteorological Institute (CC BY 3.0)\n")) ;; TODO link!
+      ))
   (weather-metno~switch-to-forecast-buffer)) 
 
 ;;;###autoload
