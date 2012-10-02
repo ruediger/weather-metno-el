@@ -136,22 +136,22 @@ The data is available under CC-BY-3.0."
     (url-retrieve
      url
      (lambda (status buffer point)
-       (switch-to-buffer (current-buffer))
-       (goto-char (point-min))
-       (unless (search-forward "\n\n" nil t)
-         (kill-buffer)
-         (error "Error in http reply"))
-       (let ((headers (buffer-substring (point-min) (point))))
-         (unless (string-match-p "^HTTP/1.1 200 OK" headers)
+       (save-excursion
+         (goto-char (point-min))
+         (unless (search-forward "\n\n" nil t)
            (kill-buffer)
-           (error "Unable to fetch data"))
-         (url-store-in-cache (current-buffer))
+           (error "Error in http reply"))
+         (let ((headers (buffer-substring (point-min) (point))))
+           (unless (string-match-p "^HTTP/1.1 200 OK" headers)
+             (kill-buffer)
+             (error "Unable to fetch data"))
+           (url-store-in-cache (current-buffer))
 
-         (let ((image (create-image (buffer-substring (point) (point-max))
-                                    (if content-type nil 'png) t)))
-           (kill-buffer)
-           (with-current-buffer buffer
-             (put-image image point)))))
+           (let ((image (create-image (buffer-substring (point) (point-max))
+                                      (if content-type nil 'png) t)))
+             (kill-buffer)
+             (with-current-buffer buffer
+               (put-image image point))))))
      (list buffer point))))
 
 (defun weather-metno~parse-time-string (time-string)
@@ -170,7 +170,7 @@ compatible timestamps.  Except for fractional seconds! Thanks to tali713."
            (mod (* 60
                    (timezone-zone-to-minute
                     (replace-regexp-in-string ":" "" zone)))
-            (* 3600 24))
+                (* 3600 24))
          (car (current-time-zone))))))
 
 (defun weather-metno~forecast-url (lat lon &optional msl)
@@ -247,24 +247,24 @@ documentation of the web API."
   (let ((url (weather-metno~forecast-url lat lon msl)))
     (url-retrieve url
                   (lambda (status callback lat lon msl)
-                    (switch-to-buffer (current-buffer))
-                    (goto-char (point-min))
-                    (unless (search-forward "\n\n" nil t)
-                      (kill-buffer)
-                      (error "Error in http reply"))
-                    (let ((headers (buffer-substring (point-min) (point))))
-                      (unless (string-match-p "^HTTP/1.1 200 OK" headers)
+                    (save-excursion
+                      (goto-char (point-min))
+                      (unless (search-forward "\n\n" nil t)
                         (kill-buffer)
-                        (error "Unable to fetch data"))
-                      (url-store-in-cache (current-buffer))
+                        (error "Error in http reply"))
+                      (let ((headers (buffer-substring (point-min) (point))))
+                        (unless (string-match-p "^HTTP/1.1 200 OK" headers)
+                          (kill-buffer)
+                          (error "Unable to fetch data"))
+                        (url-store-in-cache (current-buffer))
 
-                      (let ((xml (xml-parse-region (point) (point-max))))
-                        (kill-buffer)
+                        (let ((xml (xml-parse-region (point) (point-max))))
+                          (kill-buffer)
 
-                        (funcall callback lat lon msl raw-xml
-                                 (if raw-xml
-                                     xml
-                                   (weather-metno~forecast-convert xml))))))
+                          (funcall callback lat lon msl raw-xml
+                                   (if raw-xml
+                                       xml
+                                     (weather-metno~forecast-convert xml)))))))
                   (list callback lat lon msl))))
 
 (defun weather-metno~string-empty? (x)
