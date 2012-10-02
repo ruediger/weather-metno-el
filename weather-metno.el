@@ -435,13 +435,26 @@ LAST-HEADLINE should point to the place where icons can be inserted."
   (interactive)
   (kill-buffer weather-metno-buffer-name))
 
+(defvar weather-metno-forecast-mode-map
+  (let ((map (make-sparse-keymap)))
+    (define-key map "q" 'weather-metno~kill-forecast-buffer)
+    (define-key map "g" 'weather-metno-update)
+    map)
+  "Keymap for `weather-metno-forecast-mode'.")
+
+(eval-when-compile (require 'easymenu))
+(easy-menu-define weather-metno-forecast-mode weather-metno-forecast-mode-map
+  "Menu for Weather Metno Forecast."
+  '("Weather"
+    ["Update" weather-metno-update
+     :help "Fetch new data from met.no"]
+    ["Quit" weather-metno~kill-forecast-buffer
+     :help "Quit"]))
+
 (define-derived-mode weather-metno-forecast-mode special-mode
   "metno-forecast"
   "Major mode for showing weather forecasts."
-  :group 'weather-metno
-
-  (define-key weather-metno-forecast-mode-map "q"
-    'weather-metno~kill-forecast-buffer))
+  :group 'weather-metno)
 
 (defvar weather-metno~data nil
   "Weather data cache.")
