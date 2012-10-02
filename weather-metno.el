@@ -283,7 +283,7 @@ documentation of the web API."
   (if (numberp n)
       (number-to-string n)))
 
-(defvar weather-metno-forecast-buffer-name "*Weather*"
+(defvar weather-metno-buffer-name "*Weather*"
   "Name for the forecast buffer.")
 
 (defface weather-metno-header
@@ -412,11 +412,11 @@ LAST-HEADLINE should point to the place where icons can be inserted."
 
 (defun weather-metno~switch-to-forecast-buffer ()
   (interactive)
-  (switch-to-buffer weather-metno-forecast-buffer-name))
+  (switch-to-buffer weather-metno-buffer-name))
 
 (defun weather-metno~kill-forecast-buffer ()
   (interactive)
-  (kill-buffer weather-metno-forecast-buffer-name))
+  (kill-buffer weather-metno-buffer-name))
 
 (define-derived-mode weather-metno-forecast-mode special-mode
   "metno-forecast"
