@@ -484,12 +484,11 @@ LAST-HEADLINE should point to the place where icons can be inserted."
   (unless weather-metno~data
     (weather-metno-update))
 
-  (when (get-buffer weather-metno-buffer-name)
-    (kill-buffer weather-metno-buffer-name))
-
   (save-excursion
     (with-current-buffer (get-buffer-create weather-metno-buffer-name)
       (let ((inhibit-read-only t))
+        (remove-images (point-min) (point-max))
+
         (weather-metno-forecast-mode)
         (erase-buffer)
         (goto-char (point-min))
