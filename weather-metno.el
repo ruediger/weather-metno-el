@@ -124,22 +124,22 @@ See `format-time-string' for a description of the format."
 (defun weather-metno~do-insert-weathericon (status buffer point content-type)
   "Insert image in BUFFER at POINT.
 This is used by `weather-metno-insert-weathericon' as handler."
-  (switch-to-buffer (current-buffer))
-  (goto-char (point-min))
-  (unless (search-forward "\n\n" nil t)
-    (kill-buffer)
-    (error "Error in http reply"))
-  (let ((headers (buffer-substring (point-min) (point))))
-    (unless (string-match-p "^HTTP/1.1 200 OK" headers)
+  (save-excursion
+    (goto-char (point-min))
+    (unless (search-forward "\n\n" nil t)
       (kill-buffer)
-      (error "Unable to fetch data"))
-    (url-store-in-cache (current-buffer))
+      (error "Error in http reply"))
+    (let ((headers (buffer-substring (point-min) (point))))
+      (unless (string-match-p "^HTTP/1.1 200 OK" headers)
+        (kill-buffer)
+        (error "Unable to fetch data"))
+      (url-store-in-cache (current-buffer))
 
-    (let ((image (create-image (buffer-substring (point) (point-max))
-                               (if content-type nil 'png) t)))
-      (kill-buffer)
-      (with-current-buffer buffer
-        (put-image image point)))))
+      (let ((image (create-image (buffer-substring (point) (point-max))
+                                 (if content-type nil 'png) t)))
+        (kill-buffer)
+        (with-current-buffer buffer
+          (put-image image point))))))
 
 (defvar weather-metno-symbol-expire-time 86400
   "Expire time for symbols in seconds.
@@ -156,8 +156,10 @@ This uses the met.no weathericon API
 http://api.met.no/weatherapi/weathericon/1.0/documentation
 
 The data is available under CC-BY-3.0."
-  (let* ((url (weather-metno~weathericon-url icon nightp polarp content-type))
-         (expire-time2 (or expire-time weather-metno-symbol-expire-time))
+  (let* ((url (weather-metno~weathericon-url icon nightp polarp
+                                             content-type))
+         (expire-time2 (or expire-time
+                           weather-metno-symbol-expire-time))
          (expired (if expire-time2
                       (url-cache-expired url expire-time2)
                     t)))
@@ -185,7 +187,7 @@ compatible timestamps.  Except for fractional seconds! Thanks to tali713."
            (mod (* 60
                    (timezone-zone-to-minute
                     (replace-regexp-in-string ":" "" zone)))
-            (* 3600 24))
+                (* 3600 24))
          (car (current-time-zone))))))
 
 (defun weather-metno~forecast-url (lat lon &optional msl)
@@ -262,24 +264,24 @@ documentation of the web API."
   (let ((url (weather-metno~forecast-url lat lon msl)))
     (url-retrieve url
                   (lambda (status callback lat lon msl)
-                    (switch-to-buffer (current-buffer))
-                    (goto-char (point-min))
-                    (unless (search-forward "\n\n" nil t)
-                      (kill-buffer)
-                      (error "Error in http reply"))
-                    (let ((headers (buffer-substring (point-min) (point))))
-                      (unless (string-match-p "^HTTP/1.1 200 OK" headers)
+                    (save-excursion
+                      (goto-char (point-min))
+                      (unless (search-forward "\n\n" nil t)
                         (kill-buffer)
-                        (error "Unable to fetch data"))
-                      (url-store-in-cache (current-buffer))
+                        (error "Error in http reply"))
+                      (let ((headers (buffer-substring (point-min) (point))))
+                        (unless (string-match-p "^HTTP/1.1 200 OK" headers)
+                          (kill-buffer)
+                          (error "Unable to fetch data"))
+                        (url-store-in-cache (current-buffer))
 
-                      (let ((xml (xml-parse-region (point) (point-max))))
-                        (kill-buffer)
+                        (let ((xml (xml-parse-region (point) (point-max))))
+                          (kill-buffer)
 
-                        (funcall callback lat lon msl raw-xml
-                                 (if raw-xml
-                                     xml
-                                   (weather-metno~forecast-convert xml))))))
+                          (funcall callback lat lon msl raw-xml
+                                   (if raw-xml
+                                       xml
+                                     (weather-metno~forecast-convert xml)))))))
                   (list callback lat lon msl))))
 
 (defun weather-metno~string-empty? (x)
@@ -298,7 +300,7 @@ documentation of the web API."
   (if (numberp n)
       (number-to-string n)))
 
-(defvar weather-metno-forecast-buffer-name "*Weather*"
+(defvar weather-metno-buffer-name "*Weather*"
   "Name for the forecast buffer.")
 
 (defface weather-metno-header
@@ -427,11 +429,11 @@ LAST-HEADLINE should point to the place where icons can be inserted."
 
 (defun weather-metno~switch-to-forecast-buffer ()
   (interactive)
-  (switch-to-buffer weather-metno-forecast-buffer-name))
+  (switch-to-buffer weather-metno-buffer-name))
 
 (defun weather-metno~kill-forecast-buffer ()
   (interactive)
-  (kill-buffer weather-metno-forecast-buffer-name))
+  (kill-buffer weather-metno-buffer-name))
 
 (define-derived-mode weather-metno-forecast-mode special-mode
   "metno-forecast"
@@ -466,50 +468,50 @@ LAST-HEADLINE should point to the place where icons can be inserted."
   (unless weather-metno~data
     (weather-metno-update))
 
-  ;; (when (get-buffer weather-metno-buffer-name)
-  ;;   (kill-buffer weather-metno-buffer-name))
+  (when (get-buffer weather-metno-buffer-name)
+    (kill-buffer weather-metno-buffer-name))
 
   (save-excursion
-   (with-current-buffer (get-buffer-create weather-metno-buffer-name)
-     (let ((inhibit-read-only t))
-       (weather-metno-forecast-mode)
-       (erase-buffer)
-       (goto-char (point-min))
+    (with-current-buffer (get-buffer-create weather-metno-buffer-name)
+      (let ((inhibit-read-only t))
+        (weather-metno-forecast-mode)
+        (erase-buffer)
+        (goto-char (point-min))
 
-       (dolist (location weather-metno~data)
-         (weather-metno~insert 'weather-metno-header
-                               (format "Forecast for location %s,%s %s\n"
-                                       (caar location) (cadar location)
-                                       (caddar location)))
+        (dolist (location weather-metno~data)
+          (weather-metno~insert 'weather-metno-header
+                                (format "Forecast for location %s,%s %s\n"
+                                        (caar location) (cadar location)
+                                        (caddar location)))
 
-         (dolist (forecast (cadr location))
-           (let ((date-range (car forecast))
-                 (last-headline (point)))
-             (weather-metno~insert 'weather-metno-date-range
-                                   "* From "
-                                   (format-time-string
-                                    weather-metno-format-time-string
-                                    (car date-range))
-                                   " to "
-                                   (format-time-string
-                                    weather-metno-format-time-string
-                                    (cadr date-range))
-                                   "\n")
-             (dolist (entry (cdr forecast))
-               (let ((fmt-entry (weather-metno~format-entry entry last-headline)))
-                 (unless (weather-metno~string-empty? fmt-entry)
-                   (weather-metno~insert 'weather-metno-entry
-                                         "** " fmt-entry "\n"))
-                 ))
-             ))
-         )
-       (insert "\n")
-       (when (file-exists-p weather-metno-logo)
-         (insert-image-file weather-metno-logo))
-       (weather-metno~insert
-        'weather-metno-footer
-        "Data from The Norwegian Meteorological Institute (CC BY 3.0)\n")) ;; TODO link!
-     ))
+          (dolist (forecast (cadr location))
+            (let ((date-range (car forecast))
+                  (last-headline (point)))
+              (weather-metno~insert 'weather-metno-date-range
+                                    "* From "
+                                    (format-time-string
+                                     weather-metno-format-time-string
+                                     (car date-range))
+                                    " to "
+                                    (format-time-string
+                                     weather-metno-format-time-string
+                                     (cadr date-range))
+                                    "\n")
+              (dolist (entry (cdr forecast))
+                (let ((fmt-entry (weather-metno~format-entry entry last-headline)))
+                  (unless (weather-metno~string-empty? fmt-entry)
+                    (weather-metno~insert 'weather-metno-entry
+                                          "** " fmt-entry "\n"))
+                  ))
+              ))
+          )
+        (insert "\n")
+        (when (file-exists-p weather-metno-logo)
+          (insert-image-file weather-metno-logo))
+        (weather-metno~insert
+         'weather-metno-footer
+         "Data from The Norwegian Meteorological Institute (CC BY 3.0)\n")) ;; TODO link!
+      ))
   (weather-metno~switch-to-forecast-buffer))
 
 ;;;###autoload
