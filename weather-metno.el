@@ -456,7 +456,10 @@ LAST-HEADLINE should point to the place where icons can be inserted."
    (lambda (lat lon msl raw-xml data)
      (assert (not raw-xml))
      (setq weather-metno~location (list lat lon msl))
-     (setq weather-metno~data data))
+     (setq weather-metno~data data)
+     ;; If a forecast buffer exists then update it.
+     (when (get-buffer weather-metno-buffer-name)
+       (weather-metno-forecast)))
    (or lat weather-metno-location-latitude)
    (or lon weather-metno-location-longitude)
    (or msl weather-metno-location-msl)))
