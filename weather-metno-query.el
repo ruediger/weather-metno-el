@@ -112,6 +112,37 @@ Implements :select operation."
           body2)
        ret)))
 
+(defmacro weather-metno-query~regexp-iterate (x &rest body)
+  "Match REGEXP on STRING and call BODY each time.
+
+\(fn (REGEXP STRING) BODY...)"
+
+  (let ((regexp (car x))
+        (string (cadr x)))
+    `(let ((i 0)
+           (string ,string))
+       (block loop
+         (while (numberp i)
+           (setq i (string-match ,regexp ,string (1+ i)))
+           (unless (numberp i)
+             (return-from loop))
+           ,@body)))))
+
+(defun weather-metno-query-format (format data)
+  (let ((ret format))
+    (weather-metno-query~regexp-iterate
+     ("{\\(.*?\\)}" format)
+
+     (let* ((what (match-string 1 string))
+            (what-symb (intern what))
+            (data (assq what-symb data)))
+       (when data
+         (setq ret (replace-in-string ret (concat "{" what "}")
+                                      (format "%s" (cdr data)))))))
+    ret))
+
+;; {temperature}
+
 (defun avg (x)
   (/ (reduce #'+ x)
      (length x)))
