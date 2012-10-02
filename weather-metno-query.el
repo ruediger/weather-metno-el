@@ -163,7 +163,7 @@ Implements :select operation."
 
 
 (weather-metno-query
- (org-weather-metno~data '(lat lon msl) '(10 2 2012))
+ (weather-metno~data '(lat lon msl) '(10 2 2012))
 
  :get temperature :select value :each string-to-number :reduce avg
  :get windSpeed :select (mps name beaufort)
