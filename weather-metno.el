@@ -489,7 +489,7 @@ LAST-HEADLINE should point to the place where icons can be inserted."
 
           (dolist (forecast (cadr location))
             (let ((date-range (car forecast))
-                  (last-headline (point)))
+                  last-headline)
               (weather-metno~insert 'weather-metno-date-range
                                     "* From "
                                     (format-time-string
@@ -498,8 +498,9 @@ LAST-HEADLINE should point to the place where icons can be inserted."
                                     " to "
                                     (format-time-string
                                      weather-metno-format-time-string
-                                     (cadr date-range))
-                                    "\n")
+                                     (cadr date-range)))
+              (setq last-headline (point))
+              (insert "\n")
               (dolist (entry (cdr forecast))
                 (let ((fmt-entry (weather-metno~format-entry entry last-headline)))
                   (unless (weather-metno~string-empty? fmt-entry)
