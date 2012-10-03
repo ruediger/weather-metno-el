@@ -42,13 +42,14 @@ Less than 3600s (1h) does NOT make sense!"
 (defun weather-metno-mode-line~date<= (a b)
   "returns non-nil if A <= B.
 Values are expected in `decode-time' format."
-  (and
-   (<= (nth 5 a) (nth 5 b))
-   (<= (nth 4 a) (nth 4 b))
-   (<= (nth 3 a) (nth 3 b))
-   (<= (nth 2 a) (nth 2 b))
-   (<= (nth 1 a) (nth 1 b))
-   (<= (nth 0 a) (nth 0 b))))
+  (if (and (<= (nth 5 a) (nth 5 b))
+           (<= (nth 4 a) (nth 4 b))
+           (<= (nth 3 a) (nth 3 b)))
+      (if (= (nth 2 a) (nth 2 b))
+          (if (= (nth 1 a) (nth 1 b))
+              (<= (nth 0 a) (nth 0 b))
+            (<= (nth 1 a) (nth 1 b)))
+        (<= (nth 2 a) (nth 2 b)))))
 
 (defun weather-metno-mode-line~time-in-range? (time from to)
   "Returns non-nil if TIME is beteween FROM and TO.
@@ -56,13 +57,6 @@ Values are expected in `decode-time' format."
   (and
    (weather-metno-mode-line~date<= from time)
    (weather-metno-mode-line~date<= time to)))
-
-(defun weather-metno-mode-line~match-hour? (a b)
-   (and
-    (= (nth 5 a) (nth 5 b))
-    (= (nth 4 a) (nth 4 b))
-    (= (nth 3 a) (nth 3 b))
-    (= (nth 2 a) (nth 2 b))))
 
 (defun weather-metno-mode-line~format-weather ()
   (let ((location (car weather-metno~data))
@@ -77,9 +71,7 @@ Values are expected in `decode-time' format."
              (from-time (decode-time from))
              (to (cadr date-range))
              (to-time (decode-time to)))
-        (when (or (weather-metno-mode-line~time-in-range? time from-time to-time)
-                  (weather-metno-mode-line~match-hour? time from-time)
-                  (weather-metno-mode-line~match-hour? time to-time))
+        (when (weather-metno-mode-line~time-in-range? time from-time to-time)
           (dolist (entry (cdr forecast))
             (case (car entry)
               (temperature (let ((value (string-to-number
