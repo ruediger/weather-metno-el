@@ -118,6 +118,23 @@ See `format-time-string' for a description of the format."
 (defconst weather-metno-logo "met-no.png"
   "File name of the met.no logo.")
 
+(defvar weather-metno-symbol~storage nil
+  "Cache symbols")
+
+(defun weather-metno-clear-symbol-cache ()
+  (interactive)
+  (setq weather-metno-symbol~storage nil))
+
+(defun weather-metno~symbol-cache-insert (symbol icon &optional nightp polarp content-type)
+  "Store IMAGE in cache."
+  (setq weather-metno-symbol~storage (append weather-metno-symbol~storage
+                                             (list (cons (list icon nightp polarp content-type) symbol)))))
+
+(defun weather-metno~symbol-cache-fetch (icon &optional nightp polarp content-type)
+  "Fetch symbol from cache"
+  (cdr (assoc (list icon nightp polarp content-type) weather-metno-symbol~storage)))
+
+
 (defun weather-metno~weathericon-url (icon &optional nightp polarp content-type)
   "Create URL for weathericon API."
   (assert (integerp icon))
@@ -127,7 +144,7 @@ See `format-time-string' for a description of the format."
           (if polarp ";is_polarday=1" "")
           (or content-type "image/png")))
 
-(defun weather-metno~do-insert-weathericon (status buffer point content-type)
+(defun weather-metno~do-insert-weathericon (status buffer point icon nightp polarp content-type)
   "Insert image in BUFFER at POINT.
 This is used by `weather-metno-insert-weathericon' as handler."
   (save-excursion
@@ -143,6 +160,7 @@ This is used by `weather-metno-insert-weathericon' as handler."
 
       (let ((image (create-image (buffer-substring (point) (point-max))
                                  (if content-type nil 'png) t)))
+        (weather-metno~symbol-cache-insert image icon nightp polarp content-type)
         (kill-buffer)
         (with-current-buffer buffer
           (put-image image point))))))
@@ -162,20 +180,23 @@ This uses the met.no weathericon API
 http://api.met.no/weatherapi/weathericon/1.0/documentation
 
 The data is available under CC-BY-3.0."
-  (let* ((url (weather-metno~weathericon-url icon nightp polarp
-                                             content-type))
-         (expire-time2 (or expire-time
-                           weather-metno-symbol-expire-time))
-         (expired (if expire-time2
-                      (url-cache-expired url expire-time2)
-                    t)))
-    (if (not expired)
-        (with-current-buffer (url-fetch-from-cache url)
-          (weather-metno~do-insert-weathericon nil buffer point content-type))
-      (url-retrieve
-       url
-       'weather-metno~do-insert-weathericon
-       (list buffer point content-type)))))
+  (let ((symbol (weather-metno~symbol-cache-fetch icon nightp polarp content-type)))
+    (if symbol
+        (put-image symbol point)
+      (let* ((url (weather-metno~weathericon-url icon nightp polarp
+                                                 content-type))
+             (expire-time2 (or expire-time
+                               weather-metno-symbol-expire-time))
+             (expired (if expire-time2
+                          (url-cache-expired url expire-time2)
+                        t)))
+        (if (not expired)
+            (with-current-buffer (url-fetch-from-cache url)
+              (weather-metno~do-insert-weathericon nil buffer point icon nightp polarp content-type))
+          (url-retrieve
+           url
+           'weather-metno~do-insert-weathericon
+           (list buffer point icon nightp polarp content-type)))))))
 
 (defun weather-metno~parse-time-string (time-string)
   "Parse a RFC3339 compliant TIME-STRING.
@@ -338,13 +359,23 @@ documentation of the web API."
   "Insert ARGS into current buffer with FACE."
   (insert (propertize (apply 'concat args) 'face face)))
 
+(defcustom weather-metno-unit-name '(("celcius" . "℃"))
+  "Table to translate unit names.
+This can NOT be used to convert units!"
+  :group 'weather-metno)
+
+(defun weather-metno~unit-name (unit)
+  "Change UNIT to a better name"
+  (or (cdr (assoc unit weather-metno-unit-name))
+      unit))
+
 (defun weather-metno~format-value-unit (name attributes)
   "Helper to format entries that contain UNIT and VALUE.
 E.g. temperature, pressure, precipitation, ..."
-  (format "%s %s %s"
+  (format "%s %s%s"
           name
           (cdr (assq 'value attributes))
-          (cdr (assq 'unit attributes))))
+          (weather-metno~unit-name (cdr (assq 'unit attributes)))))
 
 (defun weather-metno~format~precipitation (attributes _)
   "Format precipitation."
