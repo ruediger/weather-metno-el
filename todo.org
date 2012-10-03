@@ -17,6 +17,7 @@ osm-mode's geonames.el could be used to get lat/lon for location names
 * TODO fix warnings
 * TODO make forecast buffer more usable
 Current format is more or less a data dump and not very useful.
+** TODO sort entries by time
 * TODO write query language
 This should make processing the data easier. See query branch.
 * TODO [#C] allow external application to update the weather data

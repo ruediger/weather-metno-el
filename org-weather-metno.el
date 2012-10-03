@@ -35,11 +35,6 @@
 (defvar org-weather-metno~data nil
   "The retreived weather data.")
 
-(defun org-weather-metno~time-to-date (time)
-  "Convert TIME in Emacs's time format to a date in calendar format."
-  (let ((d (decode-time time)))
-    (list (nth 4 d) (nth 3 d) (nth 5 d))))
-
 (defun org-weather-metno~date-range-to-time (date-range)
   "Convert DATE-RANGE to some time."
   (format-time-string "%Hh" (car date-range)))
@@ -58,9 +53,9 @@
     (dolist (forecast (cadr location))
       (let* ((date-range (car forecast))
              (from (car date-range))
-             (from-date (org-weather-metno~time-to-date from))
+             (from-date (weather-metno~time-to-date from))
              (to (cadr date-range))
-             (to-date (org-weather-metno~time-to-date to)))
+             (to-date (weather-metno~time-to-date to)))
         (when (and (calendar-date-equal date from-date)
                    (calendar-date-equal date to-date))
           (dolist (entry (cdr forecast))
