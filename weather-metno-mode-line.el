@@ -95,7 +95,12 @@ Values are expected in `decode-time' format."
                              (when (< precipitation value)
                                (setq precipitation value)))))))))
     (format "[%s℃ %s㎜ %s%%]"
-            temperature precipitation cloudiness)))
+            (if (= temperature most-negative-fixnum)
+                "X" temperature)
+            (if (= precipitation most-negative-fixnum)
+                "X" precipitation)
+            (if (= cloudiness most-negative-fixnum)
+                "X" cloudiness))))
 
 (defun weather-metno-mode-line~update ()
   "Update mode line."
