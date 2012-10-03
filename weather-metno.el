@@ -94,8 +94,14 @@ See `weather-metno-location-latitude' and `weather-metno-location-msl'."
   :type '(choice (const nil)
                  (number :tag "Exact")))
 
-(defcustom weather-metno-format-time-string "%Y-%m-%dT%H:%M:%S%Z"
+(defcustom weather-metno-format-time-string "%H:%M"
   "Format string used to format time data.
+See `format-time-string' for a description of the format."
+  :group 'weather-metno
+  :type 'string)
+
+(defcustom weather-metno-format-date-string "%A %Y-%m-%d"
+  "Format string used to format a date.
 See `format-time-string' for a description of the format."
   :group 'weather-metno
   :type 'string)
@@ -308,8 +314,13 @@ documentation of the web API."
   "Face for top header line."
   :group 'weather-metno)
 
-(defface weather-metno-date-range
+(defface weather-metno-date
   '((t :inherit header-line))
+  "Face for date line."
+  :group 'weather-metno)
+
+(defface weather-metno-date-range
+  '((t :inherit font-lock-function-name-face))
   "Face for date range line."
   :group 'weather-metno)
 
@@ -482,7 +493,12 @@ LAST-HEADLINE should point to the place where icons can be inserted."
   (if (and (= (string-to-number lat) weather-metno-location-latitude)
            (= (string-to-number lon) weather-metno-location-longitude))
       weather-metno-location-name
-    (format "%s,%s %s" lat lon msl)))
+    (format "location %s,%s %s" lat lon msl)))
+
+(defun weather-metno~time-to-date (time)
+  "Convert TIME in Emacs's time format to a date in calendar format."
+  (let ((d (decode-time time)))
+    (list (nth 4 d) (nth 3 d) (nth 5 d))))
 
 ;;;###autoload
 (defun weather-metno-forecast ()
@@ -502,33 +518,51 @@ LAST-HEADLINE should point to the place where icons can be inserted."
 
         (dolist (location weather-metno~data)
           (weather-metno~insert 'weather-metno-header
-                                (concat "Forecast for location "
+                                (concat "Forecast for "
                                         (weather-metno~location-format
                                          (caar location) (cadar location)
                                          (caddar location))
                                         "\n"))
 
-          (dolist (forecast (cadr location))
-            (let ((date-range (car forecast))
-                  last-headline)
-              (weather-metno~insert 'weather-metno-date-range
-                                    "* From "
-                                    (format-time-string
-                                     weather-metno-format-time-string
-                                     (car date-range))
-                                    " to "
-                                    (format-time-string
-                                     weather-metno-format-time-string
-                                     (cadr date-range)))
-              (setq last-headline (point))
-              (insert "\n")
-              (dolist (entry (cdr forecast))
-                (let ((fmt-entry (weather-metno~format-entry entry last-headline)))
-                  (unless (weather-metno~string-empty? fmt-entry)
-                    (weather-metno~insert 'weather-metno-entry
-                                          "** " fmt-entry "\n"))
-                  ))
-              ))
+          (let ((last-date '(1 1 1)))
+            (dolist (forecast (cadr location))
+              (let* ((date-range (car forecast))
+                     (from (car date-range))
+                     (to (cadr date-range))
+                     (date (weather-metno~time-to-date to))
+                     last-headline)
+                
+                (unless (calendar-date-equal date last-date)
+                  (weather-metno~insert
+                   'weather-metno-date
+                   "* For "
+                   (format-time-string weather-metno-format-date-string to)
+                   "\n"))
+                (setq last-date date)
+
+                (let ((from-string (format-time-string
+                                    weather-metno-format-time-string
+                                    from)))
+                  (if (equal from to)
+                      (weather-metno~insert 'weather-metno-date-range
+                                            "** " from-string)
+                    (weather-metno~insert 'weather-metno-date-range
+                                          "** "
+                                          from-string
+                                          "-"
+                                          (format-time-string
+                                           weather-metno-format-time-string
+                                           to))))
+                (setq last-headline (point))
+                (insert "\n")
+
+                (dolist (entry (cdr forecast))
+                  (let ((fmt-entry (weather-metno~format-entry entry last-headline)))
+                    (unless (weather-metno~string-empty? fmt-entry)
+                      (weather-metno~insert 'weather-metno-entry
+                                            "*** " fmt-entry "\n"))
+                    ))
+                )))
           )
         (insert "\n")
         (when (file-exists-p weather-metno-logo)
