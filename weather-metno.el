@@ -448,7 +448,7 @@ LAST-HEADLINE should point to the place where icons can be inserted."
 
 (defun weather-metno-forecast-backward-date ()
   (interactive)
-  (re-search-forward "^\\* " nil 'move))
+  (re-search-backward "^\\* " nil 'move))
 
 (defun weather-metno-forecast-forward-date ()
   (interactive)
