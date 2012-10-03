@@ -446,8 +446,28 @@ LAST-HEADLINE should point to the place where icons can be inserted."
   (interactive)
   (kill-buffer weather-metno-buffer-name))
 
+(defun weather-metno-forecast-backward-date ()
+  (interactive)
+  (re-search-forward "^\\* " nil 'move))
+
+(defun weather-metno-forecast-forward-date ()
+  (interactive)
+  (re-search-forward "^\\* " nil 'move))
+
+(defun weather-metno-forecast-backward-time ()
+  (interactive)
+  (re-search-backward "^\\*\\* " nil 'move))
+
+(defun weather-metno-forecast-forward-time ()
+  (interactive)
+  (re-search-forward "^\\*\\* " nil 'move))
+
 (defvar weather-metno-forecast-mode-map
   (let ((map (make-sparse-keymap)))
+    (define-key map "p" 'weather-metno-forecast-backward-time)
+    (define-key map "n" 'weather-metno-forecast-forward-time)
+    (define-key map "P" 'weather-metno-forecast-backward-date)
+    (define-key map "N" 'weather-metno-forecast-forward-date)
     (define-key map "q" 'weather-metno~kill-forecast-buffer)
     (define-key map "g" 'weather-metno-update)
     map)
@@ -457,6 +477,15 @@ LAST-HEADLINE should point to the place where icons can be inserted."
 (easy-menu-define weather-metno-forecast-mode weather-metno-forecast-mode-map
   "Menu for Weather Metno Forecast."
   '("Weather"
+    ["Backward Time" weather-metno-forecast-backward-time
+     :help "Go to previous date"]
+    ["Forward Time" weather-metno-forecast-forward-time
+     :help "Go to next date"]
+    ["Backward Date" weather-metno-forecast-backward-date
+     :help "Go to previous date"]
+    ["Forward Date" weather-metno-forecast-forward-date
+     :help "Go to next date"]
+    "---"
     ["Update" weather-metno-update
      :help "Fetch new data from met.no"]
     ["Quit" weather-metno~kill-forecast-buffer
@@ -464,7 +493,9 @@ LAST-HEADLINE should point to the place where icons can be inserted."
 
 (define-derived-mode weather-metno-forecast-mode special-mode
   "metno-forecast"
-  "Major mode for showing weather forecasts."
+  "Major mode for showing weather forecasts.
+
+\\{weather-metno-forecast-mode-map}"
   :group 'weather-metno)
 
 (defvar weather-metno~data nil
