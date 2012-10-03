@@ -477,6 +477,13 @@ LAST-HEADLINE should point to the place where icons can be inserted."
    (or lon weather-metno-location-longitude)
    (or msl weather-metno-location-msl)))
 
+(defun weather-metno~location-format (lat lon &optional msl)
+  "Format LAT LON MSL into a string"
+  (if (and (= (string-to-number lat) weather-metno-location-latitude)
+           (= (string-to-number lon) weather-metno-location-longitude))
+      weather-metno-location-name
+    (format "%s,%s %s" lat lon msl)))
+
 ;;;###autoload
 (defun weather-metno-forecast ()
   "Display weather forecast."
@@ -495,9 +502,11 @@ LAST-HEADLINE should point to the place where icons can be inserted."
 
         (dolist (location weather-metno~data)
           (weather-metno~insert 'weather-metno-header
-                                (format "Forecast for location %s,%s %s\n"
-                                        (caar location) (cadar location)
-                                        (caddar location)))
+                                (concat "Forecast for location "
+                                        (weather-metno~location-format
+                                         (caar location) (cadar location)
+                                         (caddar location))
+                                        "\n"))
 
           (dolist (forecast (cadr location))
             (let ((date-range (car forecast))
