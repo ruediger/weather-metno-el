@@ -580,7 +580,7 @@ LAST-HEADLINE should point to the place where icons can be inserted."
                     (weather-metno~insert 'weather-metno-date-range
                                           "** "
                                           from-string
-                                          "-"
+                                          "–"
                                           (format-time-string
                                            weather-metno-format-time-string
                                            to))))
