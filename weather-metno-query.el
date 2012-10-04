@@ -69,6 +69,15 @@ Implements :select operation."
            `(cdr (assq (quote ,select) (cadr ,entry))))
         entry))))
 
+(defun weather-metno-query~merge-cases (lst)
+  "Merge case statements in LST."
+  (let (ret)
+    (dolist (i lst ret)
+      (let ((elem (assoc (car i) ret)))
+        (if elem
+            (setcdr elem (append (cdr elem) (cdr i)))
+          (setq ret (append ret (list i))))))))
+
 (defmacro weather-metno-query (x &rest body)
   "Queries DATA for values at LOCATION for DATE.
 
@@ -90,38 +99,39 @@ Implements :select operation."
                       (calendar-date-equal ,date to-date))
              (dolist (entry (cdr forecast))
                (case (car entry)
-                 ,@(mapcar
-                    (lambda (ops)
-                      (let ((symbol (cadr (weather-metno-query~get-op :get ops)))
-                            (name (weather-metno-query~name ops))
-                            (max (weather-metno-query~get-op :max ops))
-                            (min (weather-metno-query~get-op :min ops))
-                            (min-max (weather-metno-query~get-op :min-max ops)))
-                        `(,symbol
-                          (let ((storage (assq (quote ,name) ret))
-                                (value ,(weather-metno~op-select ops 'entry)))
-                            (unless storage
-                              (setq storage
-                                    (cons (quote ,name)
-                                          ,(if max
-                                               'most-negative-fixnum
-                                             (if min
-                                                 'most-positive-fixnum
-                                               (when min-max
-                                                 '(cons most-positive-fixnum
-                                                        most-negative-fixnum))))))
-                              (setq ret (append ret (list storage))))
-                            (setcdr storage
-                                    ,(if max
-                                         '(max value (cdr storage))
-                                       (if min
-                                           '(min value (cdr storage))
-                                         (if min-max
-                                             '(cons (min value (cadr storage))
-                                                    (max value (cddr storage)))
-                                           '(append (cdr storage)
-                                                    (list value))))))))))
-                    body2))))))
+                 ,@(weather-metno-query~merge-cases
+                    (mapcar
+                     (lambda (ops)
+                       (let ((symbol (cadr (weather-metno-query~get-op :get ops)))
+                             (name (weather-metno-query~name ops))
+                             (max (weather-metno-query~get-op :max ops))
+                             (min (weather-metno-query~get-op :min ops))
+                             (min-max (weather-metno-query~get-op :min-max ops)))
+                         `(,symbol
+                           (let ((storage (assq (quote ,name) ret))
+                                 (value ,(weather-metno~op-select ops 'entry)))
+                             (unless storage
+                               (setq storage
+                                     (cons (quote ,name)
+                                           ,(if max
+                                                'most-negative-fixnum
+                                              (if min
+                                                  'most-positive-fixnum
+                                                (when min-max
+                                                  '(cons most-positive-fixnum
+                                                         most-negative-fixnum))))))
+                               (setq ret (append ret (list storage))))
+                             (setcdr storage
+                                     ,(if max
+                                          '(max value (cdr storage))
+                                        (if min
+                                            '(min value (cdr storage))
+                                          (if min-max
+                                              '(cons (min value (cadr storage))
+                                                     (max value (cddr storage)))
+                                            '(append (cdr storage)
+                                                     (list value))))))))))
+                     body2)))))))
        ,@(mapcar
           (lambda (ops)
             (let ((name (weather-metno-query~name ops))
@@ -173,6 +183,7 @@ Implements :select operation."
  (weather-metno~data '(lat lon msl) '(10 5 2012))
 
  :get temperature :name temperature-avg :select value :each string-to-number :reduce avg
+ :get temperature :name temperature-max :select value :each string-to-number :max
  :get windSpeed :select (mps name beaufort)
  :get precipitation :select value :each string-to-number :min-max
  :get pressure :select value :each string-to-number :min)
