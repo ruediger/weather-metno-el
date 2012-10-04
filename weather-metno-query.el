@@ -1,3 +1,29 @@
+;;; weather-metno-query.el --- Query language for weather-metno-el
+
+;; Copyright (C) 2012 Rüdiger Sonderfeld <ruediger@c-plusplus.de>
+
+;; Author: Rüdiger Sonderfeld <ruediger@c-plusplus.de>
+;; Keywords: comm
+
+;; This file is NOT part of GNU Emacs.
+
+;; weather-el is free software: you can redistribute it and/or modify
+;; it under the terms of the GNU General Public License as published by
+;; the Free Software Foundation, either version 3 of the License, or
+;; (at your option) any later version.
+
+;; weather-el is distributed in the hope that it will be useful,
+;; but WITHOUT ANY WARRANTY; without even the implied warranty of
+;; MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+;; GNU General Public License for more details.
+
+;; You should have received a copy of the GNU General Public License
+;; along with weather-el.  If not, see <http://www.gnu.org/licenses/>.
+
+;;; Commentary:
+;; A query language that allows better procession of weather-el data.
+
+;;; Code:
 
 (defun weather-metno-query~split (body)
   "Split BODY at every :get."
@@ -172,22 +198,7 @@ Implements :select operation."
                                       (format "%s" (cdr data)))))))
     ret))
 
-;; {temperature}
 
-(defun avg (x)
-  (/ (reduce #'+ x)
-     (length x)))
+(provide 'weather-metno-query)
 
-
-(weather-metno-query
- (weather-metno~data '(lat lon msl) '(10 5 2012))
-
- :get temperature :name temperature-avg :select value :each string-to-number :reduce avg
- :get temperature :name temperature-max :select value :each string-to-number :max
- :get windSpeed :select (mps name beaufort)
- :get precipitation :select value :each string-to-number :min-max
- :get pressure :select value :each string-to-number :min)
-
-
-; :get temperature :name temperature-max :select value :each string-to-number :max
-; :get temperature :name temperature-min :select value :each string-to-number :min
+;;; weather-metno-query.el ends here
