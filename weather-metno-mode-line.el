@@ -63,7 +63,8 @@ Values are expected in `decode-time' format."
         (time (decode-time))
         (temperature most-negative-fixnum)
         (cloudiness most-negative-fixnum)
-        (precipitation most-negative-fixnum))
+        (precipitation most-negative-fixnum)
+        (last-time '(0 0 0 0 0 0)))
 
     (dolist (forecast (cadr location))
       (let* ((date-range (car forecast))
@@ -71,7 +72,7 @@ Values are expected in `decode-time' format."
              (from-time (decode-time from))
              (to (cadr date-range))
              (to-time (decode-time to)))
-        (when (weather-metno-mode-line~time-in-range? time from-time to-time)
+        (if (weather-metno-mode-line~time-in-range? time from-time to-time)
           (dolist (entry (cdr forecast))
             (case (car entry)
               (temperature (let ((value (string-to-number
@@ -85,7 +86,19 @@ Values are expected in `decode-time' format."
               (precipitation (let ((value (string-to-number
                                            (cdr (assq 'value (cadr entry))))))
                              (when (< precipitation value)
-                               (setq precipitation value)))))))))
+                               (setq precipitation value))))))
+          (when (and (weather-metno-mode-line~date<= from-time time)
+                     (weather-metno-mode-line~date<= last-time from-time))
+            (setq last-time from-time)
+            (dolist (entry (cdr forecast))
+              (case (car entry)
+                (temperature (setq temperature (string-to-number
+                                                (cdr (assq 'value (cadr entry))))))
+                (cloudiness (setq cloudiness (string-to-number
+                                              (cdr (assq 'percent (cadr entry))))))
+                (precipitation (setq precipitation (string-to-number
+                                                    (cdr (assq 'value (cadr entry))))))))))))
+    (message "%s" last-time)
     (format "[%s℃ %s㎜ %s%%]"
             (if (= temperature most-negative-fixnum)
                 "X" temperature)
