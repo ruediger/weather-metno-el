@@ -22,6 +22,12 @@
           (setq ret (cons i nil)))))
     ret))
 
+(defun weather-metno-query~name (ops)
+  "Get the :name parameter from OPS."
+  (or
+   (cadr (weather-metno-query~get-op :name ops))
+   (cadr (weather-metno-query~get-op :get ops))))
+
 (defun weather-metno~index (x list)
   "Return the index of X in LIST."
   (let ((r 0))
@@ -77,9 +83,9 @@ Implements :select operation."
        (dolist (forecast (cadr (car ,data))) ;; TODO get location
          (let* ((date-range (car forecast))
                 (from (car date-range))
-                (from-date (org-weather-metno~time-to-date from))
+                (from-date (weather-metno~time-to-date from))
                 (to (cadr date-range))
-                (to-date (org-weather-metno~time-to-date to)))
+                (to-date (weather-metno~time-to-date to)))
            (when (and (calendar-date-equal ,date from-date)
                       (calendar-date-equal ,date to-date))
              (dolist (entry (cdr forecast))
@@ -87,15 +93,16 @@ Implements :select operation."
                  ,@(mapcar
                     (lambda (ops)
                       (let ((symbol (cadr (weather-metno-query~get-op :get ops)))
+                            (name (weather-metno-query~name ops))
                             (max (weather-metno-query~get-op :max ops))
                             (min (weather-metno-query~get-op :min ops))
                             (min-max (weather-metno-query~get-op :min-max ops)))
                         `(,symbol
-                          (let ((storage (assq (quote ,symbol) ret))
+                          (let ((storage (assq (quote ,name) ret))
                                 (value ,(weather-metno~op-select ops 'entry)))
                             (unless storage
                               (setq storage
-                                    (cons (quote ,symbol)
+                                    (cons (quote ,name)
                                           ,(if max
                                                'most-negative-fixnum
                                              (if min
@@ -117,10 +124,10 @@ Implements :select operation."
                     body2))))))
        ,@(mapcar
           (lambda (ops)
-            (let ((symbol (cadr (weather-metno-query~get-op :get ops)))
+            (let ((name (weather-metno-query~name ops))
                   (reduce (cadr (weather-metno-query~get-op :reduce ops))))
               (when (functionp reduce)
-                `(let ((storage (assq (quote ,symbol) ret)))
+                `(let ((storage (assq ',name ret)))
                    (when storage
                      (setcdr storage (funcall (quote ,reduce) (cdr storage))))))))
           body2)
@@ -163,9 +170,13 @@ Implements :select operation."
 
 
 (weather-metno-query
- (weather-metno~data '(lat lon msl) '(10 2 2012))
+ (weather-metno~data '(lat lon msl) '(10 5 2012))
 
- :get temperature :select value :each string-to-number :reduce avg
+ :get temperature :name temperature-avg :select value :each string-to-number :reduce avg
  :get windSpeed :select (mps name beaufort)
  :get precipitation :select value :each string-to-number :min-max
  :get pressure :select value :each string-to-number :min)
+
+
+; :get temperature :name temperature-max :select value :each string-to-number :max
+; :get temperature :name temperature-min :select value :each string-to-number :min
