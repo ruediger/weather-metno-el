@@ -172,6 +172,8 @@ Implements :select operation."
 (defmacro weather-metno-query~regexp-iterate (x &rest body)
   "Match REGEXP on STRING and call BODY each time.
 
+Inside the body the variable STRING can be accessed.
+
 \(fn (REGEXP STRING) BODY...)"
 
   (let ((regexp (car x))
