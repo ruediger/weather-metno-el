@@ -221,7 +221,7 @@ ACTION can be one of the following:
 Warning: Always set NO-EXEC if the format string comes from an outside source!"
   (let ((ret string))
     (weather-metno-query~regexp-iterate
-     ("{\\(.+?\\)|?\\(.*?\\)}" string)
+     ("{\\(.+?\\)\\(?:}\\||\\(.*?\\)}\\)" string)
 
      (let* ((what (match-string 1 string))
             (what-symb (intern what))

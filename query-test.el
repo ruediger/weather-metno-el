@@ -87,7 +87,9 @@
   (should (string= (weather-metno-query-format "{x|:x}" '((x 1 2 3 4 5))
                                                'prefix
                                                "weather-metno-query-test-")
-                   "3")))
+                   "3"))
+  (should (string= (weather-metno-query-format "a{x-y}b" '((x . 1) (x-y . 2)))
+                   "a2b")))
 
 (provide 'query-test)
 ;;; query-test.el ends here.
