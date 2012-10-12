@@ -61,7 +61,22 @@
 (ert-deftest query-format ()
   "Test `weather-metno-query-format'."
   (should (string= (weather-metno-query-format "hello {x}" '((x . "world")))
-                   "hello world")))
+                   "hello world"))
+  (should (string= (weather-metno-query-format "hello {y}" '((x . "world")))
+                   "hello {y}"))
+  (should (string= (weather-metno-query-format "Hello {x}{y}" '((z . "Z")
+                                                                (x . "world")
+                                                                (y . "!")))
+                   "Hello world!"))
+  (should (string= (weather-metno-query-format "Hello {x|'not}" '((x . nil)))
+                   "Hello t"))
+  (should (string= (weather-metno-query-format "Hello {x|(concat $data \"!\")}"
+                                               '((x . "world")))
+                   "Hello world!"))
+  (should (string= (weather-metno-query-format "{x|%+d}" '((x . 12)))
+                   "+12"))
+  (should (string= (weather-metno-query-format "Hello {x|'not}" '((x . nil)) t)
+                   "Hello nil")))
 
 (provide 'query-test)
 ;;; query-test.el ends here.
