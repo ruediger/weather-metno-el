@@ -181,7 +181,7 @@ Inside the body the variable STRING can be accessed.
 
   (let ((regexp (car x))
         (string (cadr x)))
-    `(let ((i 0)
+    `(let ((i -1)
            (string ,string))
        (block loop
          (while (numberp i)

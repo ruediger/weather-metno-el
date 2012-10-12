@@ -48,7 +48,7 @@
 
 (ert-deftest query~regexp-iterator ()
   "Test `weather-metno-query~regexp-iterate'."
-  (let ((data "a {b} c {d} e")
+  (let ((data "{b} c {d} e")
         (matches '("b" "d"))
         (n 0))
   (weather-metno-query~regexp-iterate
