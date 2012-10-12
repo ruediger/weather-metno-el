@@ -28,7 +28,7 @@
 
 (defvar weather-metno-mode-line~string ""
   "String to display in the mode line.")
-;;;###autoload (put 'battery-mode-line-string 'risky-local-variable t)
+;;;###autoload (put 'weather-metno-mode-line-string 'risky-local-variable t)
 
 (defcustom weather-metno-mode-line-interval 3600
   "Update interval for mode-line in seconds.
