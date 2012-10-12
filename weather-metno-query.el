@@ -190,10 +190,15 @@ Inside the body the variable STRING can be accessed.
              (return-from loop))
            ,@body)))))
 
-(defun weather-metno-query-format (format data)
-  (let ((ret format))
+(defun weather-metno-query-format (string data)
+  "Format STRING with DATA.
+
+This function is similar to `format'.  But uses a named syntax instead.
+DATA is an `assq' list and {NAME} gets replaced by the `cdr' of the entry
+in the `assq' list."
+  (let ((ret string))
     (weather-metno-query~regexp-iterate
-     ("{\\(.*?\\)}" format)
+     ("{\\(.*?\\)}" string)
 
      (let* ((what (match-string 1 string))
             (what-symb (intern what))
