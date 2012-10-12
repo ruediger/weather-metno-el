@@ -205,6 +205,7 @@ syntax.  ACTION can be one of the following:
   variable $data is set to the matching data.
 - Starts with a ': If NO-EXEC is nil then the function is called with
   the data as first argument.
+- car,cdr,cadr,nthX: the result of car, cdr, cadr, or (nth X $data)
 
 Warning: Always set NO-EXEC if the format string comes from an outside source!"
   (let ((ret string))
@@ -215,13 +216,11 @@ Warning: Always set NO-EXEC if the format string comes from an outside source!"
             (what-symb (intern what))
             (action (match-string 2 string))
             (data (assq what-symb data)))
-       (message "::: %s %s" what action)
        (when data
          (setq ret (replace-regexp-in-string
                     (regexp-quote (match-string 0 string))
                     (cond
                      ((and (stringp action) (string-prefix-p "%" action))
-                      (message "%s %s" action (cdr data))
                       (format action (cdr data)))
                      ((and (not no-exec) (stringp action)
                            (string-prefix-p "(" action))
@@ -231,6 +230,15 @@ Warning: Always set NO-EXEC if the format string comes from an outside source!"
                            (string-prefix-p "'" action))
                       (format "%s" (funcall (intern (substring action 1))
                                             (cdr data))))
+                     ((and (stringp action) (string= "car" action))
+                      (format "%s" (cadr data)))
+                     ((and (stringp action) (string= "cdr" action))
+                      (format "%s" (cddr data)))
+                     ((and (stringp action) (string= "cadr" action))
+                      (format "%s" (caddr data)))
+                     ((and (stringp action) (string-prefix-p "nth" action))
+                      (format "%s" (nth (string-to-number (substring action 3))
+                                        (cdr data))))
                      (t (format "%s" (cdr data))))
                     ret)))))
     ret))

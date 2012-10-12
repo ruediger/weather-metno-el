@@ -76,7 +76,12 @@
   (should (string= (weather-metno-query-format "{x|%+d}" '((x . 12)))
                    "+12"))
   (should (string= (weather-metno-query-format "Hello {x|'not}" '((x . nil)) t)
-                   "Hello nil")))
+                   "Hello nil"))
+  (should (string= (weather-metno-query-format "{x|car}" '((x 1 2))) "1"))
+  (should (string= (weather-metno-query-format "{x|cdr}" '((x 1 2 3))) "(2 3)"))
+  (should (string= (weather-metno-query-format "{x|cadr}" '((x 1 2))) "2"))
+  (should (string= (weather-metno-query-format "{x|nth3}" '((x 1 2 3 4 5)))
+                                               "4")))
 
 (provide 'query-test)
 ;;; query-test.el ends here.
