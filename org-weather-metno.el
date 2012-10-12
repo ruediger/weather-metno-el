@@ -46,12 +46,15 @@
     :get temperature :name temperature-min :select value :each string-to-number :min
     :get temperature :name temperature-avg :select value :each string-to-number
       :reduce org-weather-metno~q-avg
-    :get precipitation :select value :each string-to-number :max)
-  ""
+    :get precipitation :name precipitation-max :select value :each string-to-number :max
+    :get precipitation :name precipitation-min :select value :each string-to-number :min)
+  "The query used by `org-weather-metno-format'.
+See `weather-metno-query' for more information."
   :group 'weather-metno)
 
-(defcustom org-weather-metno-format "{temperature-min}℃ ({temperature-min-time|:time}) to {temperature-max}℃ ({temperature-max-time|:time})"
-  "The for"
+(defcustom org-weather-metno-format "{precipitation-min}–{precipitation-max} ㎜ ({precipitation-min-time|:time}–{precipitation-max-time|:time}) {temperature-min}–{temperature-max} ℃ ({temperature-min-time|:time}–{temperature-max-time|:time})"
+  "The format of the org agenda weather entry.
+See `org-weather-metno-query' and `weather-query-format' for more information."
   :group 'org-weather-metno
   :type 'string)
 
