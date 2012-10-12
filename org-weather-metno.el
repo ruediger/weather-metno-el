@@ -52,12 +52,14 @@
   "The query used by `org-weather-metno-format'.
 See `weather-metno-query' for more information."
   :group 'weather-metno)
+;;;###autoload (put 'org-weather-metno-query 'risky-local-variable t)
 
 (defcustom org-weather-metno-format "{symbol|:symbol} {precipitation-min}–{precipitation-max} ㎜ ({precipitation-min-time|:time}–{precipitation-max-time|:time}) {temperature-min}–{temperature-max} ℃ ({temperature-min-time|:time}–{temperature-max-time|:time})"
   "The format of the org agenda weather entry.
 See `org-weather-metno-query' and `weather-query-format' for more information."
   :group 'org-weather-metno
   :type 'string)
+;;;###autoload (put 'weather-metno-format 'risky-local-variable t)
 
 (defun org-weather-metno~f-time (date-range)
   "Convert DATE-RANGE to some time."
