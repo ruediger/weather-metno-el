@@ -60,7 +60,8 @@
 
 (ert-deftest query-format ()
   "Test `weather-metno-query-format'."
-  (should (string= (weather-metno-query-format "hello {x}" '((x . "world"))) "hello world")))
+  (should (string= (weather-metno-query-format "hello {x}" '((x . "world")))
+                   "hello world")))
 
 (provide 'query-test)
 ;;; query-test.el ends here.
