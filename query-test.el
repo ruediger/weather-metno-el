@@ -58,6 +58,8 @@
    (setq n (1+ n)))
   (should (= n 2))))
 
+(defun weather-metno-query-test-x (x) (nth 2 x))
+
 (ert-deftest query-format ()
   "Test `weather-metno-query-format'."
   (should (string= (weather-metno-query-format "hello {x}" '((x . "world")))
@@ -81,7 +83,11 @@
   (should (string= (weather-metno-query-format "{x|cdr}" '((x 1 2 3))) "(2 3)"))
   (should (string= (weather-metno-query-format "{x|cadr}" '((x 1 2))) "2"))
   (should (string= (weather-metno-query-format "{x|nth3}" '((x 1 2 3 4 5)))
-                                               "4")))
+                                               "4"))
+  (should (string= (weather-metno-query-format "{x|:x}" '((x 1 2 3 4 5))
+                                               'prefix
+                                               "weather-metno-query-test-")
+                   "3")))
 
 (provide 'query-test)
 ;;; query-test.el ends here.

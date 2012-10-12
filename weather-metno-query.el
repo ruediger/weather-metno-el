@@ -190,7 +190,7 @@ Inside the body the variable STRING can be accessed.
              (return-from loop))
            ,@body)))))
 
-(defun weather-metno-query-format (string data &optional no-exec)
+(defun weather-metno-query-format (string data &optional no-exec prefix)
   "Format STRING with DATA.
 
 This function is similar to `format'.  But uses a named syntax instead.
@@ -198,13 +198,16 @@ DATA is an `assq' list and {NAME} gets replaced by the `cdr' of the entry in
 the `assq' list.
 
 It is possible to apply actions to the data first by using the {NAME|ACTION}
-syntax.  ACTION can be one of the following:
+syntax.  Data in this context is the `cdr' of the entry returned by `assq'.
+ACTION can be one of the following:
 
 - Starts with a %: Use a different format than the default %s.  See `format'.
 - Starts with a (: If NO-EXEC is nil then the expression is evaluated and the
   variable $data is set to the matching data.
 - Starts with a ': If NO-EXEC is nil then the function is called with
   the data as first argument.
+- Starts with a :: If NO-EXEC is nil or `prefix' then assume
+  (concat PREFIX ACTION) is a function and execute it.
 - car,cdr,cadr,nthX: the result of car, cdr, cadr, or (nth X $data)
 
 Warning: Always set NO-EXEC if the format string comes from an outside source!"
@@ -217,30 +220,37 @@ Warning: Always set NO-EXEC if the format string comes from an outside source!"
             (action (match-string 2 string))
             (data (assq what-symb data)))
        (when data
-         (setq ret (replace-regexp-in-string
-                    (regexp-quote (match-string 0 string))
-                    (cond
-                     ((and (stringp action) (string-prefix-p "%" action))
-                      (format action (cdr data)))
-                     ((and (not no-exec) (stringp action)
-                           (string-prefix-p "(" action))
-                      (format "%s" (let (($data (cdr data)))
-                                     (eval (read action)))))
-                     ((and (not no-exec) (stringp action)
-                           (string-prefix-p "'" action))
-                      (format "%s" (funcall (intern (substring action 1))
-                                            (cdr data))))
-                     ((and (stringp action) (string= "car" action))
-                      (format "%s" (cadr data)))
-                     ((and (stringp action) (string= "cdr" action))
-                      (format "%s" (cddr data)))
-                     ((and (stringp action) (string= "cadr" action))
-                      (format "%s" (caddr data)))
-                     ((and (stringp action) (string-prefix-p "nth" action))
-                      (format "%s" (nth (string-to-number (substring action 3))
+         (setq ret
+               (replace-regexp-in-string
+                (regexp-quote (match-string 0 string))
+                (cond
+                 ((and (stringp action) (string-prefix-p "%" action))
+                  (format action (cdr data)))
+                 ((and (not no-exec) (stringp action)
+                       (string-prefix-p "(" action))
+                  (format "%s" (let (($data (cdr data)))
+                                 (eval (read action)))))
+                 ((and (not no-exec) (stringp action)
+                       (string-prefix-p "'" action))
+                  (format "%s" (funcall (intern (substring action 1))
                                         (cdr data))))
-                     (t (format "%s" (cdr data))))
-                    ret)))))
+                 ((and (stringp action) (string= "car" action))
+                  (format "%s" (cadr data)))
+                 ((and (stringp action) (string= "cdr" action))
+                  (format "%s" (cddr data)))
+                 ((and (stringp action) (string= "cadr" action))
+                  (format "%s" (caddr data)))
+                 ((and (stringp action) (string-prefix-p "nth" action))
+                  (format "%s" (nth (string-to-number (substring action 3))
+                                    (cdr data))))
+                 ((and (or (not no-exec) (eq no-exec 'prefix)) prefix
+                       (stringp action) (string-prefix-p ":" action))
+                  (format "%s" (funcall (intern
+                                         (concat prefix
+                                                 (substring action 1)))
+                                        (cdr data))))
+                 (t (format "%s" (cdr data))))
+                ret)))))
     ret))
 
 (provide 'weather-metno-query)
