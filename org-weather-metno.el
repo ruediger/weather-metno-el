@@ -33,12 +33,15 @@
 (require 'weather-metno)
 (require 'weather-metno-query)
 
+(eval-when-compile
+  (require 'cl))
+
 (defvar org-weather-metno~data nil
   "The retreived weather data.")
 
 (defun org-weather-metno~q-avg (x)
   "Calculate average of X."
-  (/ (reduce #'+ x)
+  (/ (cl-reduce #'+ x)
      (length x)))
 
 (defcustom org-weather-metno-query
