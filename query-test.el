@@ -55,7 +55,8 @@
    ("{\\(.*?\\)}" data)
    (should (string= data string))
    (should (string= (nth n matches) (match-string 1 string)))
-   (setq n (1+ n)))))
+   (setq n (1+ n)))
+  (should (= n 2))))
 
 (provide 'query-test)
 ;;; query-test.el ends here.
