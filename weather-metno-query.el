@@ -110,8 +110,26 @@ Implements :select operation."
 (defmacro weather-metno-query (x &rest body)
   "Queries DATA for values at LOCATION for DATE.
 
-\(fn (DATA LOCATION DATE) BODY...)"
+LOCATION is currently ignored.  BODY contains query language instructions:
 
+- :get NAME ... Gets entries with NAME and starts an instruction set.
+- :select PARAMETER ... Select PARAMETER from entry.
+- :name RESULT-NAME ... Store values with RESULT-NAME.
+- :each FUNC ... Call FUNC on each selected parameter.
+- :max ... Store max and time of max in RESULT-NAME-time.
+- :min ... Store min and time of min in RESULT-NAME-time.
+- :reduce FUNC ... call FUNC with accumulated results as parameter.
+
+Each set of query instructions begins with a `:get' instruction!
+
+Example:
+
+:get temperature :name temperature-max :select value :each string-to-number :max
+:get temperature :name temperature-min :select value :each string-to-number :min
+:get temperature :name temperature-avg :select value :each string-to-number
+    :reduce avg
+
+\(fn (DATA LOCATION DATE) BODY...)"
   (let ((data (nth 0 x))
         (location (nth 1 x))
         (date (nth 2 x))
