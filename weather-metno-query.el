@@ -131,35 +131,43 @@ Implements :select operation."
                  ,@(weather-metno-query~merge-cases
                     (mapcar
                      (lambda (ops)
-                       (let ((symbol (cadr (weather-metno-query~get-op :get ops)))
-                             (name (weather-metno-query~name ops))
-                             (max (weather-metno-query~get-op :max ops))
-                             (min (weather-metno-query~get-op :min ops))
-                             (min-max (weather-metno-query~get-op :min-max ops)))
+                       (let* ((symbol (cadr (weather-metno-query~get-op :get ops)))
+                              (name (weather-metno-query~name ops))
+                              (time-name (intern (concat (symbol-name name)
+                                                         "-time")))
+                              (max (weather-metno-query~get-op :max ops))
+                              (min (weather-metno-query~get-op :min ops)))
                          `(,symbol
                            (let ((storage (assq (quote ,name) ret))
+                                 (time-storage
+                                  ,(when (or max min)
+                                     `(assq ',time-name ret)))
                                  (value ,(weather-metno~op-select ops 'entry)))
                              (unless storage
                                (setq storage
                                      (cons (quote ,name)
                                            ,(if max
                                                 'most-negative-fixnum
-                                              (if min
-                                                  'most-positive-fixnum
-                                                (when min-max
-                                                  '(cons most-positive-fixnum
-                                                         most-negative-fixnum))))))
+                                              (when min
+                                                  'most-positive-fixnum))))
                                (setq ret (append ret (list storage))))
+                             ,(when (or max min)
+                                `(unless time-storage
+                                   (setq time-storage (cons ',time-name nil))
+                                   (setq ret (append ret (list time-storage)))))
                              (setcdr storage
                                      ,(if max
-                                          '(max value (cdr storage))
+                                          '(if (< value (cdr storage))
+                                               (cdr storage)
+                                             (setcdr time-storage (list from))
+                                             value)
                                         (if min
-                                            '(min value (cdr storage))
-                                          (if min-max
-                                              '(cons (min value (cadr storage))
-                                                     (max value (cddr storage)))
-                                            '(append (cdr storage)
-                                                     (list value))))))))))
+                                            '(if (> value (cdr storage))
+                                                 (cdr storage)
+                                               (setcdr time-storage (list from))
+                                               value)
+                                          '(append (cdr storage)
+                                                   (list value)))))))))
                      body2)))))))
        ,@(mapcar
           (lambda (ops)

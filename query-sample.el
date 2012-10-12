@@ -5,12 +5,12 @@
 
 
 (weather-metno-query
- (weather-metno~data '(lat lon msl) '(10 5 2012))
+ (weather-metno~data '(lat lon msl) '(10 12 2012))
 
  :get temperature :name temperature-avg :select value :each string-to-number :reduce avg
  :get temperature :name temperature-max :select value :each string-to-number :max
  :get windSpeed :select (mps name beaufort)
- :get precipitation :select value :each string-to-number :min-max
+ :get precipitation :select value :each string-to-number :max
  :get pressure :select value :each string-to-number :min)
 
 
