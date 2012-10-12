@@ -95,14 +95,17 @@ Implements :select operation."
            `(cdr (assq (quote ,select) (cadr ,entry))))
         entry))))
 
-(defun weather-metno-query~merge-cases (lst)
+(defun weather-metno-query~merge-cases (lst &optional ret)
   "Merge case statements in LST."
-  (let (ret)
-    (dolist (i lst ret)
-      (let ((elem (assoc (car i) ret)))
-        (if elem
-            (setcdr elem (append (cdr elem) (cdr i)))
-          (setq ret (append ret (list i))))))))
+  (if lst
+    (weather-metno-query~merge-cases
+     (cdr lst)
+     (let ((elem (assoc (caar lst) ret)))
+       (if elem
+          (append (remove elem ret)
+                  (list (append elem (cdar lst))))
+         (append ret (list (car lst))))))
+    ret))
 
 (defmacro weather-metno-query (x &rest body)
   "Queries DATA for values at LOCATION for DATE.

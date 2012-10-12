@@ -44,7 +44,7 @@
 (ert-deftest query~merge-cases ()
   "Test `weather-metno~merge-cases'."
   (should (equal (weather-metno-query~merge-cases '((a b c) (d e) (a x)))
-                 '((a b c x) (d e)))))
+                 '((d e) (a b c x)))))
 
 (ert-deftest query~regexp-iterator ()
   "Test `weather-metno-query~regexp-iterate'."
