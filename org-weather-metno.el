@@ -31,11 +31,31 @@
 ;;; Code:
 
 (require 'weather-metno)
+(require 'weather-metno-query)
 
 (defvar org-weather-metno~data nil
   "The retreived weather data.")
 
-(defun org-weather-metno~date-range-to-time (date-range)
+(defun org-weather-metno~q-avg (x)
+  "Calculate average of X."
+  (/ (reduce #'+ x)
+     (length x)))
+
+(defcustom org-weather-metno-query
+  '(:get temperature :name temperature-max :select value :each string-to-number :max
+    :get temperature :name temperature-min :select value :each string-to-number :min
+    :get temperature :name temperature-avg :select value :each string-to-number
+      :reduce org-weather-metno~q-avg
+    :get precipitation :select value :each string-to-number :max)
+  ""
+  :group 'weather-metno)
+
+(defcustom org-weather-metno-format "{temperature-min}℃ ({temperature-min-time|:time}) to {temperature-max}℃ ({temperature-max-time|:time})"
+  "The for"
+  :group 'org-weather-metno
+  :type 'string)
+
+(defun org-weather-metno~f-time (date-range)
   "Convert DATE-RANGE to some time."
   (format-time-string "%Hh" (car date-range)))
 
@@ -45,47 +65,15 @@
   (unless weather-metno~data
     (weather-metno-update))
 
-  (let ((location (car weather-metno~data))
-        temperature
-        cloudiness
-        precipitation)
-
-    (dolist (forecast (cadr location))
-      (let* ((date-range (car forecast))
-             (from (car date-range))
-             (from-date (weather-metno~time-to-date from))
-             (to (cadr date-range))
-             (to-date (weather-metno~time-to-date to)))
-        (when (and (calendar-date-equal date from-date)
-                   (calendar-date-equal date to-date))
-          (dolist (entry (cdr forecast))
-            (case (car entry)
-              (temperature (setq temperature (append temperature
-                                                     (list
-                                                      (list entry from to)))))
-              (cloudiness (setq cloudiness (append cloudiness
-                                                   (list
-                                                    (list entry from to)))))
-              (precipitation (setq precipitation (append precipitation
-                                                         (list
-                                                          (list entry from
-                                                                to))))))))))
-    (let ((temp-min most-positive-fixnum) temp-min-time
-          (temp-max most-negative-fixnum) temp-max-time)
-      (dolist (data temperature)
-        (let ((temp (string-to-number (cdr (assq 'value (cadar data))))))
-          (when (< temp temp-min)
-            (setq temp-min temp)
-            (setq temp-min-time (cdr data)))
-          (when (> temp temp-max)
-            (setq temp-max temp)
-            (setq temp-max-time (cdr data)))))
-      (unless (or (= temp-min most-positive-fixnum) (= temp-max most-negative-fixnum))
-        (format "%s℃ (%s) to %s℃ (%s)"
-                temp-min
-                (org-weather-metno~date-range-to-time temp-min-time)
-                temp-max
-                (org-weather-metno~date-range-to-time temp-max-time))))))
+  (let ((query-data (eval `(weather-metno-query
+                            (weather-metno~data nil date)
+                            ,@org-weather-metno-query))))
+    (when query-data
+      (message "Query: %s" query-data)
+      (weather-metno-query-format
+       org-weather-metno-format
+       query-data
+       nil "org-weather-metno~f-"))))
 
 (provide 'org-weather-metno)
 
