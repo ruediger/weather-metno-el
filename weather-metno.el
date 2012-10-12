@@ -144,26 +144,31 @@ See `format-time-string' for a description of the format."
           (if polarp ";is_polarday=1" "")
           (or content-type "image/png")))
 
-(defun weather-metno~do-insert-weathericon (status buffer point icon nightp polarp content-type)
+(defun weather-metno~get-image (icon nightp polarp content-type)
+  "Extract image from current-buffer."
+  (goto-char (point-min))
+  (unless (search-forward "\n\n" nil t)
+    (kill-buffer)
+    (error "Error in http reply"))
+  (let ((headers (buffer-substring (point-min) (point))))
+    (unless (string-match-p "^HTTP/1.1 200 OK" headers)
+      (kill-buffer)
+      (error "Unable to fetch data"))
+    (url-store-in-cache (current-buffer))
+    (let ((image (create-image (buffer-substring (point) (point-max))
+                               (if content-type nil 'png) t)))
+      (weather-metno~symbol-cache-insert image icon nightp polarp content-type)
+      (kill-buffer)
+      image)))
+
+(defun weather-metno~do-insert-weathericon (status buffer point icon nightp
+                                                   polarp content-type)
   "Insert image in BUFFER at POINT.
 This is used by `weather-metno-insert-weathericon' as handler."
   (save-excursion
-    (goto-char (point-min))
-    (unless (search-forward "\n\n" nil t)
-      (kill-buffer)
-      (error "Error in http reply"))
-    (let ((headers (buffer-substring (point-min) (point))))
-      (unless (string-match-p "^HTTP/1.1 200 OK" headers)
-        (kill-buffer)
-        (error "Unable to fetch data"))
-      (url-store-in-cache (current-buffer))
-
-      (let ((image (create-image (buffer-substring (point) (point-max))
-                                 (if content-type nil 'png) t)))
-        (weather-metno~symbol-cache-insert image icon nightp polarp content-type)
-        (kill-buffer)
-        (with-current-buffer buffer
-          (put-image image point))))))
+    (let ((image (weather-metno~get-image icon nightp polarp content-type)))
+      (with-current-buffer buffer
+        (put-image image point)))))
 
 (defvar weather-metno-symbol-expire-time 86400
   "Expire time for symbols in seconds.
@@ -197,6 +202,29 @@ The data is available under CC-BY-3.0."
            url
            'weather-metno~do-insert-weathericon
            (list buffer point icon nightp polarp content-type)))))))
+
+(defun weather-metno-get-weathericon (icon &optional nightp polarp content-type
+                                           expire-time)
+  "Fetch the weather ICON and return it.
+Fetch is done synchronously.  Use `weather-metno-insert-weathericon' if you just
+want to insert the icon into a buffer.
+
+The data is available under CC-BY-3.0."
+  (let ((symbol (weather-metno~symbol-cache-fetch icon nightp polarp content-type)))
+    (if symbol
+        symbol
+      (let* ((url (weather-metno~weathericon-url icon nightp polarp
+                                                 content-type))
+             (expire-time2 (or expire-time
+                               weather-metno-symbol-expire-time))
+             (expired (if expire-time2
+                          (url-cache-expired url expire-time2)
+                        t)))
+        (if (not expired)
+            (with-current-buffer (url-fetch-from-cache url)
+              (weather-metno~get-image icon nightp polarp content-type))
+          (with-current-buffer (url-retrieve-synchronously url)
+            (weather-metno~get-image icon nightp polarp content-type)))))))
 
 (defun weather-metno~parse-time-string (time-string)
   "Parse a RFC3339 compliant TIME-STRING.

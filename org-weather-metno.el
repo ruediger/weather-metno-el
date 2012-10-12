@@ -47,12 +47,13 @@
     :get temperature :name temperature-avg :select value :each string-to-number
       :reduce org-weather-metno~q-avg
     :get precipitation :name precipitation-max :select value :each string-to-number :max
-    :get precipitation :name precipitation-min :select value :each string-to-number :min)
+    :get precipitation :name precipitation-min :select value :each string-to-number :min
+    :get symbol :select number :each string-to-number :max)
   "The query used by `org-weather-metno-format'.
 See `weather-metno-query' for more information."
   :group 'weather-metno)
 
-(defcustom org-weather-metno-format "{precipitation-min}–{precipitation-max} ㎜ ({precipitation-min-time|:time}–{precipitation-max-time|:time}) {temperature-min}–{temperature-max} ℃ ({temperature-min-time|:time}–{temperature-max-time|:time})"
+(defcustom org-weather-metno-format "{symbol|:symbol} {precipitation-min}–{precipitation-max} ㎜ ({precipitation-min-time|:time}–{precipitation-max-time|:time}) {temperature-min}–{temperature-max} ℃ ({temperature-min-time|:time}–{temperature-max-time|:time})"
   "The format of the org agenda weather entry.
 See `org-weather-metno-query' and `weather-query-format' for more information."
   :group 'org-weather-metno
@@ -61,6 +62,16 @@ See `org-weather-metno-query' and `weather-query-format' for more information."
 (defun org-weather-metno~f-time (date-range)
   "Convert DATE-RANGE to some time."
   (format-time-string "%Hh" (car date-range)))
+
+(defun org-weather-metno~f-symbol (number)
+  "Fetch symbol for NUMBER."
+  (let ((image (weather-metno-get-weathericon number)))
+    (if image
+        (propertize "icon"
+                    'display (append image '(:ascent center))
+                    'rear-nonsticky '(display))
+      "")))
+
 
 ;;;###autoload
 (defun org-weather-metno ()
