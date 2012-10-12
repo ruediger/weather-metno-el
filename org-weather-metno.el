@@ -59,7 +59,7 @@ See `weather-metno-query' for more information."
 See `org-weather-metno-query' and `weather-query-format' for more information."
   :group 'org-weather-metno
   :type 'string)
-;;;###autoload (put 'weather-metno-format 'risky-local-variable t)
+;;;###autoload (put 'org-weather-metno-format 'risky-local-variable t)
 
 (defun org-weather-metno~f-time (date-range)
   "Convert DATE-RANGE to some time."
