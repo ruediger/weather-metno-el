@@ -61,7 +61,10 @@ See `weather-metno-location-latitude', `weather-metno-location-longitude', and
   "Find default location latitude."
   (if (boundp 'user-location-latitude)
       user-location-latitude
-    (if (require 'solar nil t)
+    (if (and (boundp 'calendar-latitude)
+             (or (numberp calendar-latitude)
+                 (vectorp calendar-latitude))
+             (require 'solar nil t))
         (calendar-latitude)
       0))) ;; TODO better default?
 
@@ -76,7 +79,10 @@ See `weather-metno-location-longitude' and `weather-metno-location-msl'."
   "Find default location latitude."
   (if (boundp 'user-location-longitude)
       user-location-longitude
-    (if (require 'solar nil t)
+    (if (and (boundp 'calendar-longitude)
+             (or (numberp calendar-longitude)
+                 (vectorp calendar-longitude))
+             (require 'solar nil t))
         (calendar-longitude)
       0))) ;; TODO better default?
 
@@ -230,6 +236,7 @@ The data is available under CC-BY-3.0."
   "Parse a RFC3339 compliant TIME-STRING.
 This function is similar to `decode-time' but works with RFC3339 (ISO 8601)
 compatible timestamps.  Except for fractional seconds! Thanks to tali713."
+  (require 'timezone)
   (destructuring-bind (year month day time zone)
       (append (timezone-parse-date time-string) nil)
     `(,@(subseq (parse-time-string time) 0 3)
