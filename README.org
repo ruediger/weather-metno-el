@@ -21,6 +21,9 @@ weather forecast for the given location.
 
 Please submit bug reports and feature requests to the [[https://github.com/ruediger/weather-metno-el/issues][Github issue tracker]].
 
+#+CAPTION: Weather forecast buffer
+[[./images/weather-forecast.png]]
+
 * Orgmode support
 Weather-metno-el can display weather data in your agenda buffer.  Simply add the
 following line to an entry in an agenda file (see =org-agenda-files=):
@@ -30,6 +33,9 @@ following line to an entry in an agenda file (see =org-agenda-files=):
 #+END_SRC
 
 You have to manually call =M-x weather-metno-update= to update the data.
+
+#+CAPTION: Weather data in the Agenda
+[[./images/agenda.png]]
 
 You can customize the way the information is displayed in the agenda buffer by
 customizing the variables =org-weather-metno-query= and
@@ -61,6 +67,9 @@ weather-metno-update= for now.
 
 The mode-line support does not yet use the query language and therefore the
 displayed information can not be configured.
+
+#+CAPTION: mode-line support
+[[./images/mode-line.png]]
 
 * Coding Guideline
 Internal functions and variables are marked with a =~= after the prefix.  E.g.,
