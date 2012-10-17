@@ -41,7 +41,7 @@
 
 (defun org-weather-metno~q-avg (x)
   "Calculate average of X."
-  (/ (cl-reduce #'+ x)
+  (/ (apply #'+ x)
      (length x)))
 
 (defcustom org-weather-metno-query
