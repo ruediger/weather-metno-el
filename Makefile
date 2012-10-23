@@ -1,4 +1,4 @@
-NAME  := weather-metno-el
+NAME  := weather-metno
 DESCRIPTION := Weather data from met.no in Emacs
 
 EMACS := emacs
