@@ -578,9 +578,9 @@ LAST-HEADLINE should point to the place where icons can be inserted."
      (assert (not raw-xml))
      (setq weather-metno~location (list lat lon msl))
      (setq weather-metno~data data)
-     ;; If a forecast buffer exists then update it.
+     ;; If a forecast buffer exists then update it but do not switch.
      (when (get-buffer weather-metno-buffer-name)
-       (weather-metno-forecast)))
+       (weather-metno-forecast t)))
    (or lat weather-metno-location-latitude)
    (or lon weather-metno-location-longitude)
    (or msl weather-metno-location-msl)))
@@ -598,8 +598,9 @@ LAST-HEADLINE should point to the place where icons can be inserted."
     (list (nth 4 d) (nth 3 d) (nth 5 d))))
 
 ;;;###autoload
-(defun weather-metno-forecast ()
-  "Display weather forecast."
+(defun weather-metno-forecast (&optional no-switch)
+  "Display weather forecast.
+If NO-SWITCH is non-nil then do not switch to weather forecast buffer."
   (interactive)
   (unless weather-metno~data
     (weather-metno-update))
@@ -669,7 +670,8 @@ LAST-HEADLINE should point to the place where icons can be inserted."
          "Data from The Norwegian Meteorological Institute (CC BY 3.0)\n" ;; TODO link!
          )))
     (goto-char (point-min)))
-  (weather-metno~switch-to-forecast-buffer))
+  (unless no-switch
+    (weather-metno~switch-to-forecast-buffer)))
 
 ;;;###autoload
 (defun weather-metno-forecast-location (lat lon &optional msl)
