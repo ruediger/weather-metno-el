@@ -101,7 +101,6 @@ Values are expected in `decode-time' format."
                                               (cdr (assq 'percent (cadr entry))))))
                 (precipitation (setq precipitation (string-to-number
                                                     (cdr (assq 'value (cadr entry))))))))))))
-    (message "%s" last-time)
     (format "[%s℃ %s㎜ %s%%]"
             (if (= temperature most-negative-fixnum)
                 "X" temperature)

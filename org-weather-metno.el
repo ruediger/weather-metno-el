@@ -88,7 +88,6 @@ See `org-weather-metno-query' and `weather-query-format' for more information."
                             (weather-metno~data nil date)
                             ,@org-weather-metno-query))))
     (when query-data
-      (message "Query: %s" query-data)
       (weather-metno-query-format
        org-weather-metno-format
        query-data
