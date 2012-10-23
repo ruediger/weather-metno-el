@@ -26,6 +26,9 @@
 (require 'weather-metno)
 (require 'calendar)
 
+(eval-when-compile
+  (require 'cl))
+
 (defvar weather-metno-mode-line~string ""
   "String to display in the mode line.")
 ;;;###autoload (put 'weather-metno-mode-line-string 'risky-local-variable t)

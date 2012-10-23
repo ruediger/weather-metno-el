@@ -25,6 +25,9 @@
 
 ;;; Code:
 
+(eval-when-compile
+  (require 'cl))
+
 (defun weather-metno-query~split (body)
   "Split BODY at every :get."
   (let (ret current)
