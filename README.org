@@ -10,21 +10,36 @@ Emacs.
 The project is currently work in progress and likely to change dramatically.
 See =todo.org= for todos and longterm goals.
 
-To get started compile and load the file =weather-metno.el=.  Set the variables
-=weather-metno-location-name=, =weather-metno-location-latitude=,
-=weather-metno-location-longitude=, and optionally =weather-metno-location-msl=.
-This is not strictly necessary but will provide useful defaults for the
-forecast.
+Please submit bug reports and feature requests to the [[https://github.com/ruediger/weather-metno-el/issues][Github issue tracker]].
+
+* Installation
+The easiest way to install weather-metno is by using [[https://github.com/dimitri/el-get#readme][el-get]] or
+[[http://marmalade-repo.org/packages/weather-metno/][marmalade-repo]] (package.el).
+
+For manual installation simply call =make= to byte compile the code and add the
+directory to your =load-path=.
+
+* Usage
+Set the variables =weather-metno-location-name=, =weather-metno-location-latitude=,
+=weather-metno-location-longitude=, and optionally
+=weather-metno-location-msl=.  Alternatively the calendar locations are used.
+
+#+BEGIN_SRC emacs-lisp
+(setq weather-metno-location-name "Vienna, Austria"
+      weather-metno-location-latitude 48
+      weather-metno-location-longitude 16)
+#+END_SRC
 
 Now run =M-x weather-metno-forecast= and it will open a new buffer showing the
 weather forecast for the given location.
 
-Please submit bug reports and feature requests to the [[https://github.com/ruediger/weather-metno-el/issues][Github issue tracker]].
-
 #+CAPTION: Weather forecast buffer
 [[./images/weather-forecast.png]]
 
-* Orgmode support
+You can use =M-x weather-metno-forecast-location= to get the weather forecast
+for a different location.
+
+** Orgmode support
 Weather-metno-el can display weather data in your agenda buffer.  Simply add the
 following line to an entry in an agenda file (see =org-agenda-files=):
 
@@ -56,7 +71,7 @@ about this.  Currently the specifically defined actions are:
 - :symbol :: Interpret the number value as a symbol index and retrieve it.
 - :time :: Interpret the value as emacs' time and format it accordingly.
 
-* Mode-line support
+** Mode-line support
 Weather-metno-el comes with a feature to display the current weather in the
 mode-line.  Similar to the =battery= feature of Emacs.
 
