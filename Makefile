@@ -16,7 +16,7 @@ endif
 
 PACKAGE := $(NAME)-$(VERSION)
 TARBALL := $(PACKAGE).tar
-PACKAGE_CONTENT := $(SOURCES) README.org images
+PACKAGE_CONTENT := $(SOURCES) README.org README.html images
 PKG_EL := $(NAME)-pkg.el
 
 .PHONY: all test doc package clean dist-clean
@@ -28,13 +28,17 @@ test: $(TESTS)
 
 clean:
 	$(info Cleaning up)
-	@$(RM) $(ELC) $(NAME)-pkg.el
+	@$(RM) $(ELC) $(NAME)-pkg.el README.html
 	@$(RM) -r $(PACKAGE)
 
 dist-clean: clean
 	@$(RM) -r $(TARBALL)
 
-doc:
+README.html: README.org
+	$(info Creating documentation: $@)
+	@$(BATCH) -l org.el --visit=$< -f org-export-as-html-batch
+
+doc: README.html
 
 $(PKG_EL):
 	@echo "(define-package \"$(NAME)\" \"$(VERSION)\" \"$(DESCRIPTION)\")" > $@
