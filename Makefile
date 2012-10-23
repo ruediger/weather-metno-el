@@ -16,7 +16,7 @@ endif
 
 PACKAGE := $(NAME)-$(VERSION)
 TARBALL := $(PACKAGE).tar
-PACKAGE_CONTENT := $(SOURCES) README.org README.html images
+PACKAGE_CONTENT := $(SOURCES) Makefile README.org README.html images
 PKG_EL := $(NAME)-pkg.el
 
 .PHONY: all test doc package clean dist-clean
@@ -47,6 +47,7 @@ $(TARBALL): test $(PKG_EL) doc
 	$(info Creating package tarball $(TARBALL))
 	@mkdir -p $(PACKAGE)
 	@cp -r $(PACKAGE_CONTENT) $(PKG_EL) $(PACKAGE)/
+	@echo "$(VERSION)" > $(PACKAGE)/version
 	@tar cf $(TARBALL) $(PACKAGE)
 
 package: $(TARBALL)
