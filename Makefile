@@ -28,7 +28,7 @@ TARBALL := $(PACKAGE).tar
 PACKAGE_CONTENT := $(SOURCES) Makefile README.org README.html images
 PKG_EL := $(NAME)-pkg.el
 
-.PHONY: all test doc package clean dist-clean
+.PHONY: all test doc package clean distclean
 all: $(ELC)
 	$(info $(NAME) Version: $(VERSION))
 
@@ -40,7 +40,7 @@ clean:
 	@$(RM) $(ELC) $(NAME)-pkg.el README.html
 	@$(RM) -r $(PACKAGE)
 
-dist-clean: clean
+distclean: clean
 	@$(RM) -r $(TARBALL)
 
 README.html: README.org
