@@ -3,6 +3,7 @@
 ;; Copyright (C) 2012 Rüdiger Sonderfeld <ruediger@c-plusplus.de>
 
 ;; Author: Rüdiger Sonderfeld <ruediger@c-plusplus.de>
+;; URL: https://github.com/ruediger/weather-metno-el
 ;; Keywords: comm
 
 ;; This file is NOT part of GNU Emacs.

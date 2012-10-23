@@ -1,6 +1,7 @@
 ;;; weather-metno-mode-line.el --- Weather in the mode line
 
 ;; Author: Rüdiger Sonderfeld <ruediger@c-plusplus.de>
+;; URL: https://github.com/ruediger/weather-metno-el
 ;; Keywords: comm
 
 ;; This file is NOT part of GNU Emacs.
