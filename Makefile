@@ -12,7 +12,7 @@ DATE := $(shell date +%Y%m%d)
 
 ifneq ($(wildcard .git),)
 	GITVERSION ?= $(shell git describe --tags --dirty --always)
-	VERSION ?= $(shell git describe --tags --exact-match | sed 's/^v//')
+	VERSION ?= $(shell git describe --tags --exact-match 2> /dev/null | sed 's/^v//')
 endif
 
 ifeq ($(VERSION),)
