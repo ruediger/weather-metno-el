@@ -8,10 +8,19 @@ SOURCES := $(wildcard *.el)
 ELC     := $(patsubst %.el, %.elc, $(SOURCES))
 TESTS   := $(wildcard *-test.el)
 
+DATE := $(shell date +%Y%m%d)
+
 ifneq ($(wildcard .git),)
-	VERSION ?= $(shell git describe --tags --dirty --always)
-else
-	VERSION ?= $(shell cat version)
+	GITVERSION ?= $(shell git describe --tags --dirty --always)
+	VERSION ?= $(shell git describe --tags --exact-match | sed 's/^v//')
+endif
+
+ifeq ($(VERSION),)
+	ifneq ($(wildcard version),)
+		VERSION := $(shell cat version)
+	else
+		VERSION := $(DATE)
+	endif
 endif
 
 PACKAGE := $(NAME)-$(VERSION)
@@ -48,6 +57,9 @@ $(TARBALL): test $(PKG_EL) doc
 	@mkdir -p $(PACKAGE)
 	@cp -r $(PACKAGE_CONTENT) $(PKG_EL) $(PACKAGE)/
 	@echo "$(VERSION)" > $(PACKAGE)/version
+ifneq ($(GITVERSION),)
+	@echo "$(GITVERSION)" > $(PACKAGE)/git-version
+endif
 	@tar cf $(TARBALL) $(PACKAGE)
 
 package: $(TARBALL)
