@@ -151,6 +151,23 @@ See `format-time-string' for a description of the format."
           (if polarp ";is_polarday=1" "")
           (or content-type "image/png")))
 
+(defcustom weather-metno-get-image-props nil
+  "Image props for weather symbols.
+See `create-image' or \"(elisp) Images\" for an explanation.
+
+Example: (:width 16 :height 16 :ascent center) to force icons to be 16x16. This
+only works if ImageMagick is used.  See `weather-metno-use-imagemagick'."
+  :group 'weather-metno
+  :type 'list)
+
+(defcustom weather-metno-use-imagemagick (fboundp 'imagemagick-types)
+  ;; TODO is there a better way to identify if emacs has imagemagick support?
+  "Use ImageMagick to load images.
+ImageMagick is required for some image options such as resizing.
+See `weather-metno-get-image-props'."
+  :group 'weather-metno
+  :type 'boolean)
+
 (defun weather-metno~get-image (icon nightp polarp content-type)
   "Extract image from current-buffer."
   (goto-char (point-min))
@@ -162,8 +179,11 @@ See `format-time-string' for a description of the format."
       (kill-buffer)
       (error "Unable to fetch data"))
     (url-store-in-cache (current-buffer))
-    (let ((image (create-image (buffer-substring (point) (point-max))
-                               (if content-type nil 'png) t)))
+    (let ((image (apply #'create-image (buffer-substring (point) (point-max))
+                        (if weather-metno-use-imagemagick
+                            'imagemagick
+                          (if content-type nil 'png))
+                        t weather-metno-get-image-props)))
       (weather-metno~symbol-cache-insert image icon nightp polarp content-type)
       (kill-buffer)
       image)))
