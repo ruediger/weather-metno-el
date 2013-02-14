@@ -92,7 +92,7 @@ See `org-weather-metno-query' and `weather-query-format' for more information."
       (weather-metno-query-format
        org-weather-metno-format
        query-data
-       nil "org-weather-metno~f-"))))
+       nil "org-weather-metno~f-" "?"))))
 
 (provide 'org-weather-metno)
 

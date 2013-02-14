@@ -220,7 +220,7 @@ Inside the body the variable STRING can be accessed.
              (return-from loop))
            ,@body)))))
 
-(defun weather-metno-query-format (string data &optional no-exec prefix)
+(defun weather-metno-query-format (string data &optional no-exec prefix default)
   "Format STRING with DATA.
 
 This function is similar to `format'.  But uses a named syntax instead.
@@ -240,6 +240,8 @@ ACTION can be one of the following:
   (concat PREFIX ACTION) is a function and execute it.
 - car,cdr,cadr,nthX: the result of car, cdr, cadr, or (nth X $data)
 
+If no data is found then DEFAULT or an empty string is used.
+
 Warning: Always set NO-EXEC if the format string comes from an outside source!"
   (let ((ret string))
     (weather-metno-query~regexp-iterate
@@ -249,10 +251,11 @@ Warning: Always set NO-EXEC if the format string comes from an outside source!"
             (what-symb (intern what))
             (action (match-string 2 string))
             (data (assq what-symb data)))
-       (when data
-         (setq ret
-               (replace-regexp-in-string
-                (regexp-quote (match-string 0 string))
+       (setq ret
+             (replace-regexp-in-string
+              (regexp-quote (match-string 0 string))
+              (if (not data)
+                  (or default "")
                 (cond
                  ((and (stringp action) (string-prefix-p "%" action))
                   (format action (cdr data)))
@@ -279,8 +282,8 @@ Warning: Always set NO-EXEC if the format string comes from an outside source!"
                                          (concat prefix
                                                  (substring action 1)))
                                         (cdr data))))
-                 (t (format "%s" (cdr data))))
-                ret)))))
+                 (t (format "%s" (cdr data)))))
+              ret))))
     ret))
 
 (provide 'weather-metno-query)
