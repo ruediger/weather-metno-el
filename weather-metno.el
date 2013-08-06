@@ -188,7 +188,7 @@ See `weather-metno-get-image-props'."
       (kill-buffer)
       image)))
 
-(defun weather-metno~do-insert-weathericon (status buffer point icon nightp
+(defun weather-metno~do-insert-weathericon (_status buffer point icon nightp
                                                    polarp content-type)
   "Insert image in BUFFER at POINT.
 This is used by `weather-metno-insert-weathericon' as handler."
@@ -346,7 +346,7 @@ See http://api.met.no/weatherapi/locationforecast/1.8/documentation for the
 documentation of the web API."
   (let ((url (weather-metno~forecast-url lat lon msl)))
     (url-retrieve url
-                  (lambda (status callback lat lon msl)
+                  (lambda (_status callback lat lon msl)
                     (save-excursion
                       (goto-char (point-min))
                       (unless (search-forward "\n\n" nil t)
