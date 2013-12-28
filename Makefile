@@ -4,7 +4,7 @@ DESCRIPTION := Weather data from met.no in Emacs
 EMACS := emacs
 BATCH := $(EMACS) -Q --batch --eval '(add-to-list '"'"'load-path ".")'
 
-TESTS   := $(wildcard *-test.el)
+TESTS   := $(wildcard test/*-test.el)
 EL 	:= $(wildcard *.el)
 SOURCES := $(filter-out $(TESTS),$(EL))
 ELC     := $(patsubst %.el, %.elc, $(SOURCES))
