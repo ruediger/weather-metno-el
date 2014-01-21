@@ -122,7 +122,7 @@ Values are expected in `decode-time' format."
 ;;;###autoload
 (define-minor-mode weather-metno-mode-line
   "Toggle weather forecast display in mode line.
-Wirht a prefix argument ARG, enable display if ARG is positive, and disable
+With a prefix argument ARG, enable display if ARG is positive, and disable
 it otherwise."
   :global t
   :group 'weather-metno
