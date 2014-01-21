@@ -4,7 +4,7 @@
 
 ;; Author: Rüdiger Sonderfeld <ruediger@c-plusplus.de>
 ;; URL: https://github.com/ruediger/weather-metno-el
-;; Package-Requires: ((emacs "24"))
+;; Package-Requires: ((emacs "24") ("cl-lib" "0.3")
 ;; Keywords: comm
 
 ;; This file is NOT part of GNU Emacs.
@@ -35,8 +35,7 @@
 (require 'url-cache)
 (require 'xml)
 
-(eval-when-compile
-  (require 'cl))
+(require 'cl-lib)
 
 (defgroup weather-metno nil
   "Weather data from met.no in Emacs."
@@ -145,7 +144,7 @@ See `format-time-string' for a description of the format."
 
 (defun weather-metno~weathericon-url (icon &optional nightp polarp content-type)
   "Create URL for weathericon API."
-  (assert (integerp icon))
+  (cl-assert (integerp icon))
   (format "%sweathericon/%s/?symbol=%s%s%s;content_type=%s" weather-metno-url
           weather-metno-weathericon-version icon
           (if nightp ";is_night=1" "")
@@ -259,9 +258,9 @@ The data is available under CC-BY-3.0."
 This function is similar to `decode-time' but works with RFC3339 (ISO 8601)
 compatible timestamps.  Except for fractional seconds! Thanks to tali713."
   (require 'timezone)
-  (destructuring-bind (year month day time zone)
+  (cl-destructuring-bind (year month day time zone)
       (append (timezone-parse-date time-string) nil)
-    `(,@(subseq (parse-time-string time) 0 3)
+    `(,@(cl-subseq (parse-time-string time) 0 3)
       ,(string-to-number day)
       ,(string-to-number month)
       ,(string-to-number year)
@@ -597,7 +596,7 @@ LAST-HEADLINE should point to the place where icons can be inserted."
   (interactive)
   (weather-metno-forecast-receive
    (lambda (lat lon msl raw-xml data)
-     (assert (not raw-xml))
+     (cl-assert (not raw-xml))
      (setq weather-metno~location (list lat lon msl))
      (setq weather-metno~data data)
      ;; If a forecast buffer exists then update it but do not switch.
@@ -640,8 +639,8 @@ If NO-SWITCH is non-nil then do not switch to weather forecast buffer."
           (weather-metno~insert 'weather-metno-header
                                 (concat "Forecast for "
                                         (weather-metno~location-format
-                                         (caar location) (cadar location)
-                                         (caddar location))
+                                         (caar location) (cl-cadar location)
+                                         (cl-caddar location))
                                         "\n"))
 
           (let ((last-date '(1 1 1)))

@@ -27,8 +27,7 @@
 (require 'weather-metno)
 (require 'calendar)
 
-(eval-when-compile
-  (require 'cl))
+(require 'cl-lib)
 
 (defvar weather-metno-mode-line~string ""
   "String to display in the mode line.")
@@ -77,25 +76,25 @@ Values are expected in `decode-time' format."
              (to (cadr date-range))
              (to-time (decode-time to)))
         (if (weather-metno-mode-line~time-in-range? time from-time to-time)
-          (dolist (entry (cdr forecast))
-            (case (car entry)
-              (temperature (let ((value (string-to-number
-                                         (cdr (assq 'value (cadr entry))))))
-                             (when (< temperature value)
-                               (setq temperature value))))
-              (cloudiness (let ((value (string-to-number
-                                        (cdr (assq 'percent (cadr entry))))))
-                             (when (< cloudiness value)
-                               (setq cloudiness value))))
-              (precipitation (let ((value (string-to-number
+            (dolist (entry (cdr forecast))
+              (cl-case (car entry)
+                (temperature (let ((value (string-to-number
                                            (cdr (assq 'value (cadr entry))))))
-                             (when (< precipitation value)
-                               (setq precipitation value))))))
+                               (when (< temperature value)
+                                 (setq temperature value))))
+                (cloudiness (let ((value (string-to-number
+                                          (cdr (assq 'percent (cadr entry))))))
+                              (when (< cloudiness value)
+                                (setq cloudiness value))))
+                (precipitation (let ((value (string-to-number
+                                             (cdr (assq 'value (cadr entry))))))
+                                 (when (< precipitation value)
+                                   (setq precipitation value))))))
           (when (and (weather-metno-mode-line~date<= from-time time)
                      (weather-metno-mode-line~date<= last-time from-time))
             (setq last-time from-time)
             (dolist (entry (cdr forecast))
-              (case (car entry)
+              (cl-case (car entry)
                 (temperature (setq temperature (string-to-number
                                                 (cdr (assq 'value (cadr entry))))))
                 (cloudiness (setq cloudiness (string-to-number

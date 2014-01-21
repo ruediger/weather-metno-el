@@ -26,8 +26,7 @@
 
 ;;; Code:
 
-(eval-when-compile
-  (require 'cl))
+(require 'cl-lib)
 
 (defun weather-metno-query~split (body)
   "Split BODY at every :get."
@@ -42,10 +41,10 @@
 (defun weather-metno-query~get-op (op ops)
   "Get OP from OPS."
   (let (flag ret)
-    (dolist (i ops)
+    (cl-dolist (i ops)
       (if flag
           (if (keywordp i)
-              (return)
+              (cl-return)
             (setq ret (append ret (list i))))
         (when (eq i op)
           (setq flag t)
@@ -61,10 +60,10 @@
 (defun weather-metno~index (x list)
   "Return the index of X in LIST."
   (let ((r 0))
-    (dolist (i list r)
+    (cl-dolist (i list r)
       (if (eq i x)
-          (return)
-        (setq r (1+ r))))
+          (cl-return)
+        (cl-incf r)))
     r))
 
 (defun weather-metno~op-each (ops entry)
@@ -213,11 +212,11 @@ Inside the body the variable STRING can be accessed.
         (string (cadr x)))
     `(let ((i -1)
            (string ,string))
-       (block loop
+       (cl-block loop
          (while (numberp i)
            (setq i (string-match ,regexp ,string (1+ i)))
            (unless (numberp i)
-             (return-from loop))
+             (cl-return-from loop))
            ,@body)))))
 
 (defun weather-metno-query-format (string data &optional no-exec prefix default)
@@ -272,7 +271,7 @@ Warning: Always set NO-EXEC if the format string comes from an outside source!"
                  ((and (stringp action) (string= "cdr" action))
                   (format "%s" (cddr data)))
                  ((and (stringp action) (string= "cadr" action))
-                  (format "%s" (caddr data)))
+                  (format "%s" (cl-caddr data)))
                  ((and (stringp action) (string-prefix-p "nth" action))
                   (format "%s" (nth (string-to-number (substring action 3))
                                     (cdr data))))

@@ -35,9 +35,6 @@
 (require 'weather-metno)
 (require 'weather-metno-query)
 
-(eval-when-compile
-  (require 'cl))
-
 (defvar org-weather-metno~data nil
   "The retreived weather data.")
 
