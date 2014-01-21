@@ -21,7 +21,6 @@ endif
 
 PACKAGE := $(NAME)-$(VERSION)
 TARBALL := $(PACKAGE).tar
-PACKAGE_CONTENT := $(SOURCES) Makefile README.org README.html images
 PKG_EL := $(NAME)-pkg.el
 PKG_EL_IN := $(PKG_EL).in
 
@@ -29,6 +28,7 @@ TESTS   := $(wildcard test/*-test.el)
 EL 	:= $(wildcard *.el)
 SOURCES := $(filter-out $(PKG_EL),$(filter-out $(TESTS),$(EL)))
 ELC     := $(patsubst %.el, %.elc, $(SOURCES))
+PACKAGE_CONTENT := $(SOURCES) Makefile README.org README.html images
 
 .PHONY: all test doc package clean distclean
 all: $(ELC)
