@@ -26,33 +26,33 @@
 (require 'ert)
 (require 'weather-metno-query)
 
-(ert-deftest query~split-test ()
-  "Test `weather-metno-query~split'."
+(ert-deftest query--split-test ()
+  "Test `weather-metno-query--split'."
   (let ((x '(:get a :foo :bar :get b x y))
         (y '((:get a :foo :bar) (:get b x y))))
-    (should (equal (weather-metno-query~split x) y))))
+    (should (equal (weather-metno-query--split x) y))))
 
-(ert-deftest query~get-op-test ()
-  "Test `weather-metno-query~get-op'."
-  (should (equal (weather-metno-query~get-op :get '(:get x :foo :bar)) '(:get x)))
-  (should (equal (weather-metno-query~get-op :foo '(:get x :foo :bar)) '(:foo)))
-  (should (equal (weather-metno-query~get-op :bar '(:get x :bar a b c :d)) '(:bar a b c))))
+(ert-deftest query--get-op-test ()
+  "Test `weather-metno-query--get-op'."
+  (should (equal (weather-metno-query--get-op :get '(:get x :foo :bar)) '(:get x)))
+  (should (equal (weather-metno-query--get-op :foo '(:get x :foo :bar)) '(:foo)))
+  (should (equal (weather-metno-query--get-op :bar '(:get x :bar a b c :d)) '(:bar a b c))))
 
-(ert-deftest query~index ()
-  "Test `weather-metno~index'."
-  (should (= (weather-metno~index 'd '(a b c d e f g)) 3)))
+(ert-deftest query--index ()
+  "Test `weather-metno--index'."
+  (should (= (weather-metno--index 'd '(a b c d e f g)) 3)))
 
-(ert-deftest query~merge-cases ()
-  "Test `weather-metno~merge-cases'."
-  (should (equal (weather-metno-query~merge-cases '((a b c) (d e) (a x)))
+(ert-deftest query--merge-cases ()
+  "Test `weather-metno--merge-cases'."
+  (should (equal (weather-metno-query--merge-cases '((a b c) (d e) (a x)))
                  '((d e) (a b c x)))))
 
-(ert-deftest query~regexp-iterator ()
-  "Test `weather-metno-query~regexp-iterate'."
+(ert-deftest query--regexp-iterator ()
+  "Test `weather-metno-query--regexp-iterate'."
   (let ((data "{b} c {d} e")
         (matches '("b" "d"))
         (n 0))
-  (weather-metno-query~regexp-iterate
+  (weather-metno-query--regexp-iterate
    ("{\\(.*?\\)}" data)
    (should (string= data string))
    (should (string= (nth n matches) (match-string 1 string)))

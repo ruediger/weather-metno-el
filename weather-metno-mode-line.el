@@ -31,7 +31,7 @@
 
 (require 'cl-lib)
 
-(defvar weather-metno-mode-line~string ""
+(defvar weather-metno-mode-line--string ""
   "String to display in the mode line.")
 ;;;###autoload (put 'weather-metno-mode-line-string 'risky-local-variable t)
 
@@ -41,10 +41,10 @@ Less than 3600s (1h) does NOT make sense!"
   :group 'weather-metno
   :type 'integer)
 
-(defvar weather-metno-mode-line~timer nil
+(defvar weather-metno-mode-line--timer nil
   "Update timer.")
 
-(defun weather-metno-mode-line~date<= (a b)
+(defun weather-metno-mode-line--date<= (a b)
   "returns non-nil if A <= B.
 Values are expected in `decode-time' format."
   (if (and (<= (nth 5 a) (nth 5 b))
@@ -56,15 +56,15 @@ Values are expected in `decode-time' format."
             (<= (nth 1 a) (nth 1 b)))
         (<= (nth 2 a) (nth 2 b)))))
 
-(defun weather-metno-mode-line~time-in-range? (time from to)
+(defun weather-metno-mode-line--time-in-range? (time from to)
   "Returns non-nil if TIME is beteween FROM and TO.
 Values are expected in `decode-time' format."
   (and
-   (weather-metno-mode-line~date<= from time)
-   (weather-metno-mode-line~date<= time to)))
+   (weather-metno-mode-line--date<= from time)
+   (weather-metno-mode-line--date<= time to)))
 
-(defun weather-metno-mode-line~format-weather ()
-  (let ((location (car weather-metno~data))
+(defun weather-metno-mode-line--format-weather ()
+  (let ((location (car weather-metno--data))
         (time (decode-time))
         (temperature most-negative-fixnum)
         (cloudiness most-negative-fixnum)
@@ -77,7 +77,7 @@ Values are expected in `decode-time' format."
              (from-time (decode-time from))
              (to (cadr date-range))
              (to-time (decode-time to)))
-        (if (weather-metno-mode-line~time-in-range? time from-time to-time)
+        (if (weather-metno-mode-line--time-in-range? time from-time to-time)
             (dolist (entry (cdr forecast))
               (cl-case (car entry)
                 (temperature (let ((value (string-to-number
@@ -92,8 +92,8 @@ Values are expected in `decode-time' format."
                                              (cdr (assq 'value (cadr entry))))))
                                  (when (< precipitation value)
                                    (setq precipitation value))))))
-          (when (and (weather-metno-mode-line~date<= from-time time)
-                     (weather-metno-mode-line~date<= last-time from-time))
+          (when (and (weather-metno-mode-line--date<= from-time time)
+                     (weather-metno-mode-line--date<= last-time from-time))
             (setq last-time from-time)
             (dolist (entry (cdr forecast))
               (cl-case (car entry)
@@ -111,12 +111,12 @@ Values are expected in `decode-time' format."
             (if (= cloudiness most-negative-fixnum)
                 "X" cloudiness))))
 
-(defun weather-metno-mode-line~update ()
+(defun weather-metno-mode-line--update ()
   "Update mode line."
-  (unless weather-metno~data
+  (unless weather-metno--data
     (weather-metno-update))
-  (setq weather-metno-mode-line~string
-        (weather-metno-mode-line~format-weather))
+  (setq weather-metno-mode-line--string
+        (weather-metno-mode-line--format-weather))
   (force-mode-line-update))
 
 ;;;###autoload
@@ -127,17 +127,17 @@ it otherwise."
   :global t
   :group 'weather-metno
 
-  (setq weather-metno-mode-line~string "")
+  (setq weather-metno-mode-line--string "")
   (unless global-mode-string
     (setq global-mode-string '("")))
-  (when weather-metno-mode-line~timer
-    (cancel-timer weather-metno-mode-line~timer))
+  (when weather-metno-mode-line--timer
+    (cancel-timer weather-metno-mode-line--timer))
   (unless weather-metno-mode-line
-    (add-to-list 'global-mode-string 'weather-metno-mode-line~string t)
-    (weather-metno-mode-line~update)
-    (setq weather-metno-mode-line~timer
+    (add-to-list 'global-mode-string 'weather-metno-mode-line--string t)
+    (weather-metno-mode-line--update)
+    (setq weather-metno-mode-line--timer
           (run-at-time nil weather-metno-mode-line-interval
-                       'weather-metno-mode-line~update))))
+                       'weather-metno-mode-line--update))))
 
 
 (provide 'weather-metno-mode-line)

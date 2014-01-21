@@ -63,11 +63,11 @@ See `org-weather-metno-query' and `weather-query-format' for more information."
   :type 'string)
 ;;;###autoload (put 'org-weather-metno-format 'risky-local-variable t)
 
-(defun org-weather-metno~f-time (date-range)
+(defun org-weather-metno--f-time (date-range)
   "Convert DATE-RANGE to some time."
   (format-time-string "%Hh" (car date-range)))
 
-(defun org-weather-metno~f-symbol (number)
+(defun org-weather-metno--f-symbol (number)
   "Fetch symbol for NUMBER."
   (let ((image (weather-metno-get-weathericon number)))
     (if image
@@ -80,17 +80,17 @@ See `org-weather-metno-query' and `weather-query-format' for more information."
 ;;;###autoload
 (defun org-weather-metno ()
   "Display weather in diary/org-mode."
-  (unless weather-metno~data
+  (unless weather-metno--data
     (weather-metno-update))
 
   (let ((query-data (eval `(weather-metno-query
-                            (weather-metno~data nil date)
+                            (weather-metno--data nil date)
                             ,@org-weather-metno-query))))
     (when query-data
       (weather-metno-query-format
        org-weather-metno-format
        query-data
-       nil "org-weather-metno~f-" "?"))))
+       nil "org-weather-metno--f-" "?"))))
 
 (provide 'org-weather-metno)
 

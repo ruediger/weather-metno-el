@@ -28,7 +28,7 @@
 
 (require 'cl-lib)
 
-(defun weather-metno-query~split (body)
+(defun weather-metno-query--split (body)
   "Split BODY at every :get."
   (let (ret current)
     (dolist (i body ret)
@@ -38,7 +38,7 @@
         (setq current (cons i nil))))
     (append ret (list current))))
 
-(defun weather-metno-query~get-op (op ops)
+(defun weather-metno-query--get-op (op ops)
   "Get OP from OPS."
   (let (flag ret)
     (cl-dolist (i ops)
@@ -51,13 +51,13 @@
           (setq ret (cons i nil)))))
     ret))
 
-(defun weather-metno-query~name (ops)
+(defun weather-metno-query--name (ops)
   "Get the :name parameter from OPS."
   (or
-   (cadr (weather-metno-query~get-op :name ops))
-   (cadr (weather-metno-query~get-op :get ops))))
+   (cadr (weather-metno-query--get-op :name ops))
+   (cadr (weather-metno-query--get-op :get ops))))
 
-(defun weather-metno~index (x list)
+(defun weather-metno--index (x list)
   "Return the index of X in LIST."
   (let ((r 0))
     (cl-dolist (i list r)
@@ -66,10 +66,10 @@
         (cl-incf r)))
     r))
 
-(defun weather-metno~op-each (ops entry)
+(defun weather-metno--op-each (ops entry)
   ""
-  (let ((each (cadr (weather-metno-query~get-op :each ops)))
-        (symbol (cadr (weather-metno-query~get-op :get ops))))
+  (let ((each (cadr (weather-metno-query--get-op :each ops)))
+        (symbol (cadr (weather-metno-query--get-op :get ops))))
     (if (not each)
         entry
       (if (functionp each)
@@ -80,28 +80,28 @@
               )
             entry)))))
 
-(defun weather-metno~op-select (ops entry)
+(defun weather-metno--op-select (ops entry)
   "Select according to OPS from ENTRY.
 Implements :select operation."
-  (let ((select (cadr (weather-metno-query~get-op :select ops))))
+  (let ((select (cadr (weather-metno-query--get-op :select ops))))
     (if (consp select)
         `(list
           ,@(mapcar
              (lambda (i)
-               (weather-metno~op-each
+               (weather-metno--op-each
                 ops
                 `(cdr (assq (quote ,i) (cadr ,entry)))))
              select))
       (if (symbolp select)
-          (weather-metno~op-each
+          (weather-metno--op-each
            ops
            `(cdr (assq (quote ,select) (cadr ,entry))))
         entry))))
 
-(defun weather-metno-query~merge-cases (lst &optional ret)
+(defun weather-metno-query--merge-cases (lst &optional ret)
   "Merge case statements in LST."
   (if lst
-    (weather-metno-query~merge-cases
+    (weather-metno-query--merge-cases
      (cdr lst)
      (let ((elem (assoc (caar lst) ret)))
        (if elem
@@ -136,34 +136,34 @@ Example:
   (let ((data (nth 0 x))
         (location (nth 1 x))
         (date (nth 2 x))
-        (body2 (weather-metno-query~split body)))
+        (body2 (weather-metno-query--split body)))
 
     `(let (ret)
        (dolist (forecast (cadr (car ,data))) ;; TODO get location
          (let* ((date-range (car forecast))
                 (from (car date-range))
-                (from-date (weather-metno~time-to-date from))
+                (from-date (weather-metno--time-to-date from))
                 (to (cadr date-range))
-                (to-date (weather-metno~time-to-date to)))
+                (to-date (weather-metno--time-to-date to)))
            (when (and (calendar-date-equal ,date from-date)
                       (calendar-date-equal ,date to-date))
              (dolist (entry (cdr forecast))
                (case (car entry)
-                 ,@(weather-metno-query~merge-cases
+                 ,@(weather-metno-query--merge-cases
                     (mapcar
                      (lambda (ops)
-                       (let* ((symbol (cadr (weather-metno-query~get-op :get ops)))
-                              (name (weather-metno-query~name ops))
+                       (let* ((symbol (cadr (weather-metno-query--get-op :get ops)))
+                              (name (weather-metno-query--name ops))
                               (time-name (intern (concat (symbol-name name)
                                                          "-time")))
-                              (max (weather-metno-query~get-op :max ops))
-                              (min (weather-metno-query~get-op :min ops)))
+                              (max (weather-metno-query--get-op :max ops))
+                              (min (weather-metno-query--get-op :min ops)))
                          `(,symbol
                            (let ((storage (assq (quote ,name) ret))
                                  (time-storage
                                   ,(when (or max min)
                                      `(assq ',time-name ret)))
-                                 (value ,(weather-metno~op-select ops 'entry)))
+                                 (value ,(weather-metno--op-select ops 'entry)))
                              (unless storage
                                (setq storage
                                      (cons (quote ,name)
@@ -192,8 +192,8 @@ Example:
                      body2)))))))
        ,@(mapcar
           (lambda (ops)
-            (let ((name (weather-metno-query~name ops))
-                  (reduce (cadr (weather-metno-query~get-op :reduce ops))))
+            (let ((name (weather-metno-query--name ops))
+                  (reduce (cadr (weather-metno-query--get-op :reduce ops))))
               (when (functionp reduce)
                 `(let ((storage (assq ',name ret)))
                    (when storage
@@ -201,7 +201,7 @@ Example:
           body2)
        ret)))
 
-(defmacro weather-metno-query~regexp-iterate (x &rest body)
+(defmacro weather-metno-query--regexp-iterate (x &rest body)
   "Match REGEXP on STRING and call BODY each time.
 
 Inside the body the variable STRING can be accessed.
@@ -243,7 +243,7 @@ If no data is found then DEFAULT or an empty string is used.
 
 Warning: Always set NO-EXEC if the format string comes from an outside source!"
   (let ((ret string))
-    (weather-metno-query~regexp-iterate
+    (weather-metno-query--regexp-iterate
      ("{\\(.+?\\)\\(?:}\\||\\(.*?\\)}\\)" string)
 
      (let* ((what (match-string 1 string))

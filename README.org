@@ -95,6 +95,3 @@ displayed information can not be configured.
 #+CAPTION: mode-line support
 [[./images/mode-line.png]]
 
-* Coding Guideline
-Internal functions and variables are marked with a =~= after the prefix.  E.g.,
-=weather-metno~format-entry=.  This was inspired by the mu4e code.
