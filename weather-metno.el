@@ -418,7 +418,9 @@ documentation of the web API."
 (defcustom weather-metno-unit-name '(("celcius" . "℃"))
   "Table to translate unit names.
 This can NOT be used to convert units!"
-  :group 'weather-metno)
+  :group 'weather-metno
+  :options '("celcius")
+  :type '(alist :key-type string :value-type string))
 
 (defun weather-metno~unit-name (unit)
   "Change UNIT to a better name"
@@ -470,7 +472,12 @@ E.g. temperature, pressure, precipitation, ..."
     ("Sterk storm" . "Violent storm")  ; 11
     ("Orkan" . "Hurricane"))           ; 12
   "Table to translate wind names from Norwegian."
-  :group 'weather-metno) ; TODO type
+  :group 'weather-metno
+  :options '("Stille" "Flau vind" "Svak vind" "Lett bris"
+             "Laber bris" "Frisk bris" "Liten kuling"
+             "Stiv kuling" "Sterk kuling" "Liten storm" "Full storm"
+             "Sterk storm" "Orkan")
+  :type '(alist :key-type string :value-type string))
 
 (defun weather-metno~translate-wind-name (name)
   "Translate NAME from Norwegian."
