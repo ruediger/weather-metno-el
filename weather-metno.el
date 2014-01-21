@@ -1,6 +1,6 @@
 ;;; weather-metno.el --- Weather data from met.no in Emacs -*- lexical-binding: t -*-
 
-;; Copyright (C) 2012 Rüdiger Sonderfeld <ruediger@c-plusplus.de>
+;; Copyright (C) 2012-2014 Rüdiger Sonderfeld <ruediger@c-plusplus.de>
 
 ;; Author: Rüdiger Sonderfeld <ruediger@c-plusplus.de>
 ;; URL: https://github.com/ruediger/weather-metno-el

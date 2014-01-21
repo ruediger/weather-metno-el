@@ -1,5 +1,7 @@
 ;;; weather-metno-mode-line.el --- Weather in the mode line
 
+;; Copyright (C) 2012-2014 Rüdiger Sonderfeld <ruediger@c-plusplus.de>
+
 ;; Author: Rüdiger Sonderfeld <ruediger@c-plusplus.de>
 ;; URL: https://github.com/ruediger/weather-metno-el
 ;; Keywords: comm
