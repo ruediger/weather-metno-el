@@ -4,11 +4,6 @@ DESCRIPTION := Weather data from met.no in Emacs
 EMACS := emacs
 BATCH := $(EMACS) -Q --batch --eval '(add-to-list '"'"'load-path ".")'
 
-TESTS   := $(wildcard test/*-test.el)
-EL 	:= $(wildcard *.el)
-SOURCES := $(filter-out $(TESTS),$(EL))
-ELC     := $(patsubst %.el, %.elc, $(SOURCES))
-
 DATE := $(shell date +%Y%m%d)
 
 ifneq ($(wildcard .git),)
@@ -28,6 +23,12 @@ PACKAGE := $(NAME)-$(VERSION)
 TARBALL := $(PACKAGE).tar
 PACKAGE_CONTENT := $(SOURCES) Makefile README.org README.html images
 PKG_EL := $(NAME)-pkg.el
+PKG_EL_IN := $(PKG_EL).in
+
+TESTS   := $(wildcard test/*-test.el)
+EL 	:= $(wildcard *.el)
+SOURCES := $(filter-out $(PKG_EL),$(filter-out $(TESTS),$(EL)))
+ELC     := $(patsubst %.el, %.elc, $(SOURCES))
 
 .PHONY: all test doc package clean distclean
 all: $(ELC)
@@ -38,7 +39,7 @@ test: $(TESTS)
 
 clean:
 	$(info Cleaning up)
-	@$(RM) $(ELC) $(NAME)-pkg.el README.html
+	@$(RM) $(ELC) $(PKG_EL) README.html
 	@$(RM) -r $(PACKAGE)
 
 distclean: clean
@@ -50,8 +51,8 @@ README.html: README.org
 
 doc: README.html
 
-$(PKG_EL):
-	@echo "(define-package \"$(NAME)\" \"$(VERSION)\" \"$(DESCRIPTION)\")" > $@
+$(PKG_EL): $(PKG_EL_IN)
+	sed -e s/@VERSION@/$(VERSION)/ $< > $@
 
 $(TARBALL): test $(PKG_EL) doc
 	$(info Creating package tarball $(TARBALL))

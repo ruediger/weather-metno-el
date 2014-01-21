@@ -4,7 +4,6 @@
 
 ;; Author: Rüdiger Sonderfeld <ruediger@c-plusplus.de>
 ;; URL: https://github.com/ruediger/weather-metno-el
-;; Package-Requires: ((emacs "24") ("cl-lib" "0.3")
 ;; Keywords: comm
 
 ;; This file is NOT part of GNU Emacs.
