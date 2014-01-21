@@ -533,7 +533,7 @@ LAST-HEADLINE should point to the place where icons can be inserted."
   (interactive)
   (switch-to-buffer weather-metno-buffer-name))
 
-(defun weather-metno--kill-forecast-buffer ()
+(defun weather-metno-kill-forecast-buffer ()
   (interactive)
   (kill-buffer weather-metno-buffer-name))
 
@@ -559,7 +559,7 @@ LAST-HEADLINE should point to the place where icons can be inserted."
     (define-key map "n" 'weather-metno-forecast-forward-time)
     (define-key map "P" 'weather-metno-forecast-backward-date)
     (define-key map "N" 'weather-metno-forecast-forward-date)
-    (define-key map "q" 'weather-metno--kill-forecast-buffer)
+    (define-key map "q" 'weather-metno-kill-forecast-buffer)
     (define-key map "g" 'weather-metno-update)
     map)
   "Keymap for `weather-metno-forecast-mode'.")
@@ -579,7 +579,7 @@ LAST-HEADLINE should point to the place where icons can be inserted."
     "---"
     ["Update" weather-metno-update
      :help "Fetch new data from met.no"]
-    ["Quit" weather-metno--kill-forecast-buffer
+    ["Quit" weather-metno-kill-forecast-buffer
      :help "Quit"]))
 
 (define-derived-mode weather-metno-forecast-mode special-mode
