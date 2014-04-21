@@ -31,6 +31,7 @@
 (require 'url)
 (require 'url-cache)
 (require 'xml)
+(require 'calendar)
 
 (require 'cl-lib)
 
