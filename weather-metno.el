@@ -173,7 +173,10 @@ See `weather-metno-get-image-props'."
     (kill-buffer)
     (error "Error in http reply"))
   (let ((headers (buffer-substring (point-min) (point))))
-    (unless (string-match-p "^HTTP/1.1 200 OK" headers)
+    (unless (string-match-p (concat "^HTTP/1.1 "
+                                    "\\(200 OK\\|203 "
+                                    "Non-Authoritative Information\\)")
+                            headers)
       (kill-buffer)
       (error "Unable to fetch data"))
     (url-store-in-cache (current-buffer))
@@ -351,7 +354,11 @@ documentation of the web API."
                         (kill-buffer)
                         (error "Error in http reply"))
                       (let ((headers (buffer-substring (point-min) (point))))
-                        (unless (string-match-p "^HTTP/1.1 200 OK" headers)
+                        (unless (string-match-p
+                                 (concat "^HTTP/1.1 "
+                                         "\\(200 OK\\|203 "
+                                         "Non-Authoritative Information\\)")
+                                 headers)
                           (kill-buffer)
                           (error "Unable to fetch data"))
                         (url-store-in-cache (current-buffer))
