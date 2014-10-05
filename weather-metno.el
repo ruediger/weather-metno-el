@@ -114,10 +114,10 @@ See `format-time-string' for a description of the format."
 (defconst weather-metno-url "http://api.met.no/weatherapi/"
   "URL to api.met.no.")
 
-(defconst weather-metno-weathericon-version "1.0"
+(defconst weather-metno-weathericon-version "1.1"
   "Version of weathericon.")
 
-(defconst weather-metno-forecast-version "1.8"
+(defconst weather-metno-forecast-version "1.9"
   "Version of locationforecast.")
 
 (defconst weather-metno-logo "met-no.png"
@@ -146,7 +146,7 @@ See `format-time-string' for a description of the format."
   (format "%sweathericon/%s/?symbol=%s%s%s;content_type=%s" weather-metno-url
           weather-metno-weathericon-version icon
           (if nightp ";is_night=1" "")
-          (if polarp ";is_polarday=1" "")
+          (if polarp ";is_polarnight=1" "")
           (or content-type "image/png")))
 
 (defcustom weather-metno-get-image-props nil
@@ -420,11 +420,11 @@ documentation of the web API."
   "Insert ARGS into current buffer with FACE."
   (insert (propertize (apply 'concat args) 'face face)))
 
-(defcustom weather-metno-unit-name '(("celcius" . "℃"))
+(defcustom weather-metno-unit-name '(("celsius" . "℃"))
   "Table to translate unit names.
 This can NOT be used to convert units!"
   :group 'weather-metno
-  :options '("celcius")
+  :options '("celsius")
   :type '(alist :key-type string :value-type string))
 
 (defun weather-metno--unit-name (unit)
