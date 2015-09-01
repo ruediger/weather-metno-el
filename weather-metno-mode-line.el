@@ -45,7 +45,7 @@ Less than 3600s (1h) does NOT make sense!"
   "Update timer.")
 
 (defun weather-metno-mode-line--date<= (a b)
-  "returns non-nil if A <= B.
+  "Return non-nil if A <= B.
 Values are expected in `decode-time' format."
   (if (and (<= (nth 5 a) (nth 5 b))
            (<= (nth 4 a) (nth 4 b))
@@ -57,7 +57,7 @@ Values are expected in `decode-time' format."
         (<= (nth 2 a) (nth 2 b)))))
 
 (defun weather-metno-mode-line--time-in-range? (time from to)
-  "Returns non-nil if TIME is beteween FROM and TO.
+  "Return non-nil if TIME is beteween FROM and TO.
 Values are expected in `decode-time' format."
   (and
    (weather-metno-mode-line--date<= from time)

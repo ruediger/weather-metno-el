@@ -79,7 +79,7 @@ See `org-weather-metno-query' and `weather-query-format' for more information."
 
 ;;;###autoload
 (defun org-weather-metno ()
-  "Display weather in diary/org-mode."
+  "Display weather in diary/‘org-mode’."
   (unless weather-metno--data
     (weather-metno-update))
 

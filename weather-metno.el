@@ -124,24 +124,24 @@ See `format-time-string' for a description of the format."
   "File name of the met.no logo.")
 
 (defvar weather-metno-symbol--storage nil
-  "Cache symbols")
+  "Symbol cache.")
 
 (defun weather-metno-clear-symbol-cache ()
   (interactive)
   (setq weather-metno-symbol--storage nil))
 
 (defun weather-metno--symbol-cache-insert (symbol icon &optional nightp polarp content-type)
-  "Store IMAGE in cache."
+  "Store SYMBOL ICON in cache."
   (setq weather-metno-symbol--storage (append weather-metno-symbol--storage
                                              (list (cons (list icon nightp polarp content-type) symbol)))))
 
 (defun weather-metno--symbol-cache-fetch (icon &optional nightp polarp content-type)
-  "Fetch symbol from cache"
+  "Fetch ICON from cache."
   (cdr (assoc (list icon nightp polarp content-type) weather-metno-symbol--storage)))
 
 
 (defun weather-metno--weathericon-url (icon &optional nightp polarp content-type)
-  "Create URL for weathericon API."
+  "Create URL to get ICON from the weathericon API."
   (cl-assert (integerp icon))
   (format "%sweathericon/%s/?symbol=%s%s%s;content_type=%s" weather-metno-url
           weather-metno-weathericon-version icon
@@ -200,7 +200,7 @@ This is used by `weather-metno-insert-weathericon' as handler."
 
 (defvar weather-metno-symbol-expire-time 86400
   "Expire time for symbols in seconds.
-See `url-cache-expire-time'. Default is 24h (86400s).")
+See `url-cache-expire-time'.  Default is 24h (86400s).")
 
 (defun weather-metno-insert-weathericon (buffer point icon &optional nightp
                                                 polarp content-type expire-time)
@@ -428,7 +428,7 @@ This can NOT be used to convert units!"
   :type '(alist :key-type string :value-type string))
 
 (defun weather-metno--unit-name (unit)
-  "Change UNIT to a better name"
+  "Change UNIT to a better name."
   (or (cdr (assoc unit weather-metno-unit-name))
       unit))
 
@@ -619,7 +619,7 @@ LAST-HEADLINE should point to the place where icons can be inserted."
    (or msl weather-metno-location-msl)))
 
 (defun weather-metno--location-format (lat lon &optional msl)
-  "Format LAT LON MSL into a string"
+  "Format LAT LON MSL into a string."
   (if (and (= (string-to-number lat) weather-metno-location-latitude)
            (= (string-to-number lon) weather-metno-location-longitude))
       weather-metno-location-name
