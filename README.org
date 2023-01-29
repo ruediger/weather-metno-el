@@ -1,6 +1,8 @@
 # -*- mode:org; mode:auto-fill; fill-column:80; coding:utf-8; -*-
 #+TITLE: weather-metno-el: Weather data from met.no in Emacs
 
+* Looking for a new Maintainer! Please reach out (e.g., on github bugs) if you want to volunteer!
+
 [[http://www.met.no/][Meteorologisk institutt]] (met.no) is the Norwegian national meterological
 institute.  It offers free weather data under the [[http://creativecommons.org/licenses/by/3.0][CC BY 3.0]] license.  The
 forecast data is available for locations outside of Norway as well.
