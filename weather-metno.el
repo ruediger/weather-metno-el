@@ -111,13 +111,34 @@ See `format-time-string' for a description of the format."
   :group 'weather-metno
   :type 'string)
 
-(defconst weather-metno-url "http://api.met.no/weatherapi/"
+(defcustom weather-metno-weathericon-directory
+  nil
+  "Weathericon directory.  Leave to nil to disable weathericons.
+
+Version 2.0 of weathericons API does not return images. Instead
+it returns an archive containing the icons and expects them to be
+used locally.
+
+If you wish to use weathericons, you must fetch the archive
+yourself and extract to your preferred location and then set this
+variable.
+
+Example of how to fetch and extract icons using curl:
+
+curl -X GET --header 'Accept: application/x-download'
+'https://api.met.no/weatherapi/weathericon/2.0/data' | tar xvf -
+
+Only png format icons are currently used."
+  :group 'weather-metno
+  :type 'string)
+
+(defconst weather-metno-url "https://api.met.no/weatherapi/"
   "URL to api.met.no.")
 
 (defconst weather-metno-weathericon-version "1.1"
   "Version of weathericon.")
 
-(defconst weather-metno-forecast-version "1.9"
+(defconst weather-metno-forecast-version "2.0"
   "Version of locationforecast.")
 
 (defconst weather-metno-logo "met-no.png"
@@ -139,15 +160,9 @@ See `format-time-string' for a description of the format."
   "Fetch ICON from cache."
   (cdr (assoc (list icon nightp polarp content-type) weather-metno-symbol--storage)))
 
-
 (defun weather-metno--weathericon-url (icon &optional nightp polarp content-type)
   "Create URL to get ICON from the weathericon API."
-  (cl-assert (integerp icon))
-  (format "%sweathericon/%s/?symbol=%s%s%s;content_type=%s" weather-metno-url
-          weather-metno-weathericon-version icon
-          (if nightp ";is_night=1" "")
-          (if polarp ";is_polarnight=1" "")
-          (or content-type "image/png")))
+  (format "file:%s/png/%s.png" weather-metno-weathericon-directory icon))
 
 (defcustom weather-metno-get-image-props nil
   "Image props for weather symbols.
@@ -173,12 +188,6 @@ See `weather-metno-get-image-props'."
     (kill-buffer)
     (error "Error in http reply"))
   (let ((headers (buffer-substring (point-min) (point))))
-    (unless (string-match-p (concat "^HTTP/1.1 "
-                                    "\\(200 OK\\|203 "
-                                    "Non-Authoritative Information\\)")
-                            headers)
-      (kill-buffer)
-      (error "Unable to fetch data"))
     (url-store-in-cache (current-buffer))
     (let ((image (apply #'create-image (buffer-substring (point) (point-max))
                         (if weather-metno-use-imagemagick
@@ -209,27 +218,30 @@ This function works asynchronously.  If NIGHTP is set then a night icon will be
 fetched.  If POLARP then an icon for a polarday will be fetched.  CONTENT-TYPE
 specifies the content-type (default image/png).
 
+Does nothing if weathericon directory is not set.
+
 This uses the met.no weathericon API
 http://api.met.no/weatherapi/weathericon/1.0/documentation
 
 The data is available under CC-BY-3.0."
-  (let ((symbol (weather-metno--symbol-cache-fetch icon nightp polarp content-type)))
-    (if symbol
-        (put-image symbol point)
-      (let* ((url (weather-metno--weathericon-url icon nightp polarp
-                                                 content-type))
-             (expire-time2 (or expire-time
-                               weather-metno-symbol-expire-time))
-             (expired (if expire-time2
-                          (url-cache-expired url expire-time2)
-                        t)))
-        (if (not expired)
-            (with-current-buffer (url-fetch-from-cache url)
-              (weather-metno--do-insert-weathericon nil buffer point icon nightp polarp content-type))
-          (url-retrieve
-           url
-           'weather-metno--do-insert-weathericon
-           (list buffer point icon nightp polarp content-type)))))))
+  (if weather-metno-weathericon-directory
+      (let ((symbol (weather-metno--symbol-cache-fetch icon nightp polarp content-type)))
+        (if symbol
+            (put-image symbol point)
+          (let* ((url (weather-metno--weathericon-url icon nightp polarp
+                                                      content-type))
+                 (expire-time2 (or expire-time
+                                   weather-metno-symbol-expire-time))
+                 (expired (if expire-time2
+                              (url-cache-expired url expire-time2)
+                            t)))
+            (if (not expired)
+                (with-current-buffer (url-fetch-from-cache url)
+                  (weather-metno--do-insert-weathericon nil buffer point icon nightp polarp content-type))
+              (url-retrieve
+               url
+               'weather-metno--do-insert-weathericon
+               (list buffer point icon nightp polarp content-type))))))))
 
 (defun weather-metno-get-weathericon (icon &optional nightp polarp content-type
                                            expire-time)
@@ -276,10 +288,10 @@ compatible timestamps.  Except for fractional seconds! Thanks to tali713."
 
 (defun weather-metno--forecast-url (lat lon &optional msl)
   "Create the url from LAT, LON and MSL to be used by `weather-metno-forecast'."
-  (concat (format "%slocationforecast/%s/?lat=%s;lon=%s"
+  (concat (format "%slocationforecast/%s/classic?lat=%s&lon=%s"
                   weather-metno-url weather-metno-forecast-version lat lon)
           (if msl
-              (format ";msl=%s" msl)
+              (format "&msl=%s" msl)
             "")))
 
 (defun weather-metno--date-to-time (x)
@@ -448,6 +460,18 @@ E.g. temperature, pressure, precipitation, ..."
   "Format temperature."
   (weather-metno--format-value-unit "Temperature" attributes))
 
+(defun weather-metno--format--dewpointTemperature (attributes _)
+  "Format dew point temperature."
+  (weather-metno--format-value-unit "Dew point" attributes))
+
+(defun weather-metno--format--minTemperature (attributes _)
+  "Format minimum temperature."
+  (weather-metno--format-value-unit "Minimum temperature" attributes))
+
+(defun weather-metno--format--maxTemperature (attributes _)
+  "Format maximum temperature."
+  (weather-metno--format-value-unit "Maximum temperature" attributes))
+
 (defun weather-metno--format--pressure (attributes _)
   "Format pressure."
   (weather-metno--format-value-unit "Pressure" attributes))
@@ -495,6 +519,11 @@ E.g. temperature, pressure, precipitation, ..."
           (cdr (assq 'beaufort attributes))
           (weather-metno--translate-wind-name (cdr (assq 'name attributes)))))
 
+(defun weather-metno--format--windGust (attributes _)
+  "Format wind gust."
+  (format "Wind gust %s m/s"
+          (cdr (assq 'mps attributes))))
+
 (defun weather-metno--format--cloudiness (attributes _)
   "Format cloudiness."
   (format "Cloudiness %s%%"
@@ -524,7 +553,7 @@ E.g. temperature, pressure, precipitation, ..."
   "Format symbol."
   (weather-metno-insert-weathericon
    (current-buffer) last-headline
-   (string-to-number (cdr (assq 'number attributes))))
+   (cdr (assq 'code attributes)))
   "")
 
 ;; Todo the last-headline thing sucks. Find something better!
