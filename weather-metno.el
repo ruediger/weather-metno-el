@@ -5,6 +5,7 @@
 ;; Author: Rüdiger Sonderfeld <ruediger@c-plusplus.de>
 ;; URL: https://github.com/ruediger/weather-metno-el
 ;; Keywords: comm
+;; Package-Requires: ((emacs "24") (cl-lib "0.3"))
 
 ;; This file is NOT part of GNU Emacs.
 
@@ -22,6 +23,8 @@
 ;; along with weather-el.  If not, see <http://www.gnu.org/licenses/>.
 
 ;;; Commentary:
+
+;; Weather data from met.no in Emacs.
 
 ;; See http://api.met.no/weatherapi/documentation
 ;; and http://api.met.no/license_data.html
